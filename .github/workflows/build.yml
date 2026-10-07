@@ -1,0 +1,31 @@
+name: Build AutoSwitcher
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish (small, needs .NET 10 Desktop Runtime)
+        run: dotnet publish src/AutoSwitcher.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=none -o dist
+
+      - name: Publish (standalone)
+        run: dotnet publish src/AutoSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -o dist-standalone
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AutoSwitcher
+          path: dist/AutoSwitcher.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AutoSwitcher-standalone
+          path: dist-standalone/AutoSwitcher.exe

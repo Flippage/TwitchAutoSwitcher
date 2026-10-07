@@ -1,0 +1,143 @@
+<UserControl x:Class="AutoSwitcher.EditCategoryPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AutoSwitcher">
+    <Grid Margin="32,26,32,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Tag="{StaticResource IconClose}"
+                    Background="{StaticResource FieldBrush}" Width="44" Height="44" ToolTip="Close" Click="Cancel_Click"/>
+            <TextBlock x:Name="Heading" Text="Add category" Style="{StaticResource H1}" VerticalAlignment="Center"/>
+        </DockPanel>
+
+        <Grid Grid.Row="1" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: category -->
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Caps}" Margin="0,0,0,8">
+                    <Run Text="1 · TWITCH CATEGORY  "/><Run Text="%gameName%" Foreground="{StaticResource AccentBrush}"
+                         FontFamily="{StaticResource MonoFont}" FontWeight="Normal"/>
+                </TextBlock>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <local:CategoryPicker x:Name="Picker" ResultsMaxHeight="380"/>
+                </ScrollViewer>
+            </DockPanel>
+
+            <!-- Right: executables -->
+            <DockPanel Grid.Column="2">
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <TextBlock DockPanel.Dock="Right" FontFamily="{StaticResource MonoFont}" FontSize="11.5">
+                        <Run Text="%fullGameName%" Foreground="{StaticResource AccentBrush}"/><Run Text=" · " Foreground="{StaticResource SubBrush}"/><Run Text="%customName%" Foreground="{StaticResource AccentBrush}"/>
+                    </TextBlock>
+                    <TextBlock Text="2 · EXECUTABLES" Style="{StaticResource Caps}"/>
+                </DockPanel>
+
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,4,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Style="{StaticResource OutlineButton}" Height="46" Click="Browse_Click" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Viewbox Width="16" Height="16" Margin="0,0,8,0">
+                                    <Path Style="{StaticResource Icon}" Data="{StaticResource IconFolder}" Stroke="{StaticResource TextBrush}"/>
+                                </Viewbox>
+                                <TextBlock Text="Browse for .exe…"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="PickRunningBtn" Grid.Column="1" Style="{StaticResource OutlineButton}" Height="46" Click="PickRunning_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <Viewbox Width="16" Height="16" Margin="0,0,8,0">
+                                    <Path Style="{StaticResource Icon}" Data="{StaticResource IconWindow}" Stroke="{StaticResource TextBrush}"/>
+                                </Viewbox>
+                                <TextBlock Text="Pick running"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    <TextBlock Style="{StaticResource Sub}" Margin="2,10,0,0"
+                               Text="Full name is read from the exe's product info (falls back to the file name). Custom name falls back to the full name. Switching between these keeps the category; the title only changes if its filled-in text changes."/>
+
+                    <Popup x:Name="RunningPopup" PlacementTarget="{Binding ElementName=PickRunningBtn}" Placement="Top"
+                           StaysOpen="False" AllowsTransparency="True" VerticalOffset="-6">
+                        <Border Width="440" Background="#1A1A1A" BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                CornerRadius="12" Padding="6">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="RUNNING APPS" Style="{StaticResource Caps}" Margin="10,6,0,6"/>
+                                <ListBox x:Name="RunningList" Style="{StaticResource ResultList}" Background="Transparent" Padding="0"
+                                         MaxHeight="320" PreviewMouseLeftButtonUp="RunningList_Click">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type local:RunningApp}">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding ProcessName}" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource TextBrush}"/>
+                                                <TextBlock Text="{Binding WindowTitle}" FontSize="12" Foreground="{StaticResource SubBrush}" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
+                        </Border>
+                    </Popup>
+                </StackPanel>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <ItemsControl x:Name="ExeList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type local:ExeMapping}">
+                                    <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="14,10,6,10" Margin="0,0,0,8">
+                                        <DockPanel>
+                                            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Tag="{StaticResource IconClose}"
+                                                    ToolTip="Remove executable" CommandParameter="{Binding}" Click="RemoveExe_Click"
+                                                    VerticalAlignment="Center"/>
+                                            <StackPanel Margin="0,0,6,0">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="12"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="FULL NAME · FROM EXE" Style="{StaticResource Caps}" FontSize="10"/>
+                                                        <TextBox Style="{StaticResource FlatField}" Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"
+                                                                 Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2">
+                                                        <TextBlock Text="CUSTOM NAME" Style="{StaticResource Caps}" FontSize="10"/>
+                                                        <TextBox Style="{StaticResource FlatField}" Foreground="{StaticResource AccentBrush}" Tag="Uses full name"
+                                                                 Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                                <TextBlock Text="{Binding Path}" Style="{StaticResource Mono}" Margin="0,6,0,0" ToolTip="{Binding Path}"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="NoExes" Style="{StaticResource Sub}" Margin="2,4,0,8"
+                                   Text="No executables yet. Browse for one, or pick a game that's running right now."/>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Grid>
+
+        <DockPanel Grid.Row="2" Margin="0,16,0,0">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button Style="{StaticResource GhostButton}" Content="Cancel" Click="Cancel_Click" Margin="0,0,10,0"/>
+                <Button Style="{StaticResource AccentButton}" Content="Save category" Click="Save_Click"/>
+            </StackPanel>
+            <TextBlock x:Name="ErrorText" Foreground="{StaticResource DangerBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+        </DockPanel>
+    </Grid>
+</UserControl>
