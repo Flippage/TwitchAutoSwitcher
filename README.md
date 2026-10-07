@@ -6,7 +6,7 @@
 
 <p align="center">
   Automatically set your Twitch <b>category</b> and <b>stream title</b> from the game you're playing.<br>
-  Built for multiworld and multi-game streams. No Streamer.bot or OBS plugins required.
+  Built for multiworld and multi-game streams. Fully self-contained: one app, nothing else to install or set up.
 </p>
 
 <p align="center">
@@ -62,7 +62,7 @@
 | `AutoSwitcher-vX.Y.Z-small-needs-dotnet10.exe` | ~26 MB | Requires the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0). |
 
 > **"Windows protected your PC"?** The app isn't code-signed yet, so SmartScreen may warn on first launch.
-> Click **More info → Run anyway**. Some chat apps (e.g. Discord) also block unsigned `.exe` files, so share the `.zip` or the release link instead.
+> Click **More info → Run anyway**. Some chat apps also block unsigned `.exe` files, so share the `.zip` or the release link instead.
 
 ---
 
@@ -85,7 +85,7 @@ The **Now Playing** panel in the sidebar shows what's detected, what's set on Tw
 Build a title template once and AutoSwitcher fills it in on every switch:
 
 ```
-AUS 18+ | Multiworld Day 2 | Now playing: [Custom Name] | !discord
+AUS 18+ | Multiworld Day 2 | Now playing: [Custom Name] | !socials
 ```
 
 | Pill | Example | Source |
@@ -103,7 +103,7 @@ AUS 18+ | Multiworld Day 2 | Now playing: [Custom Name] | !discord
 
 ## Emulators & window-title matching
 
-Many games share one executable (`project64.exe`, `retroarch.exe`…). Turn on **Match window title** for an executable and enter the part of the window title that identifies the game:
+Emulators and launchers often run many games from one executable. Turn on **Match window title** for an executable and enter the part of the window title that identifies the game:
 
 | Window title | Match text | Result |
 |---|---|---|
