@@ -5,6 +5,11 @@ on:
     branches: ['**']
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version to publish (e.g. 1.0.0). Leave blank to just build.'
+        required: false
+        default: ''
 
 permissions:
   contents: write   # needed to create a Release when a v* tag is pushed
@@ -23,8 +28,13 @@ jobs:
         id: ver
         shell: pwsh
         run: |
-          $v = if ("${{ github.ref_type }}" -eq "tag") { "${{ github.ref_name }}".TrimStart('v') } else { "1.0.0" }
+          $v = "1.0.0"
+          if ("${{ github.ref_type }}" -eq "tag") { $v = "${{ steps.ver.outputs.tag }}".TrimStart('v') }
+          elseif ("${{ inputs.version }}" -ne "") { $v = "${{ inputs.version }}".TrimStart('v') }
           "version=$v" >> $env:GITHUB_OUTPUT
+          $release = ("${{ github.ref_type }}" -eq "tag") -or ("${{ inputs.version }}" -ne "")
+          "release=$($release.ToString().ToLower())" >> $env:GITHUB_OUTPUT
+          "tag=v$v" >> $env:GITHUB_OUTPUT
 
       - name: Publish (small, needs .NET 10 Desktop Runtime)
         run: dotnet publish src/AutoSwitcher.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=none -p:Version=${{ steps.ver.outputs.version }} -o dist
@@ -44,23 +54,25 @@ jobs:
 
       # ---- Release (only for v* tags) ----
       - name: Package release files
-        if: github.ref_type == 'tag'
+        if: steps.ver.outputs.release == 'true'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force release | Out-Null
-          $v = "${{ github.ref_name }}"
+          $v = "${{ steps.ver.outputs.tag }}"
           Copy-Item dist-standalone/AutoSwitcher.exe "release/AutoSwitcher-$v.exe"
           Copy-Item dist/AutoSwitcher.exe "release/AutoSwitcher-$v-small-needs-dotnet10.exe"
           Compress-Archive -Path dist-standalone/AutoSwitcher.exe -DestinationPath "release/AutoSwitcher-$v.zip"
 
       - name: Create GitHub Release
-        if: github.ref_type == 'tag'
+        if: steps.ver.outputs.release == 'true'
         uses: softprops/action-gh-release@v3
         with:
-          name: AutoSwitcher ${{ github.ref_name }}
+          name: AutoSwitcher ${{ steps.ver.outputs.tag }}
+          tag_name: ${{ steps.ver.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           files: release/*
           body: |
-            **Download `AutoSwitcher-${{ github.ref_name }}.exe`** (or the `.zip` if your browser or chat app blocks .exe files). It runs on any Windows 10/11 64-bit PC with nothing else to install.
+            **Download `AutoSwitcher-${{ steps.ver.outputs.tag }}.exe`** (or the `.zip` if your browser or chat app blocks .exe files). It runs on any Windows 10/11 64-bit PC with nothing else to install.
 
             The `-small-needs-dotnet10` version is tiny, but needs the free [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0).
 
