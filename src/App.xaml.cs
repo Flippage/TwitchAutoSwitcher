@@ -123,13 +123,20 @@ public partial class App : Application
     /// </summary>
     private async Task RunSelfTestAsync(MainWindow window)
     {
+        System.Diagnostics.Process? selfTestChild = null;
         try
         {
-            // Map two processes that always exist on the build machine so the detection stack is exercised.
+            // Start our own short-lived processes and map them, so the detection stack is exercised on any machine.
+            var psi = new System.Diagnostics.ProcessStartInfo("cmd.exe", "/c ping -n 30 127.0.0.1 >nul")
+                { CreateNoWindow = true, UseShellExecute = false };
+            selfTestChild = System.Diagnostics.Process.Start(psi);
             Config.Categories.Add(new CategoryMapping { Id = "1", Name = "Self-test Game One",
-                Executables = { new ExeMapping { Path = @"C:\Windows\explorer.exe", FullName = "Explorer" } } });
+                Executables = { new ExeMapping { Path = @"C:\x\cmd.exe", FullName = "Command" } } });
             Config.Categories.Add(new CategoryMapping { Id = "2", Name = "Self-test Game Two With A Rather Long Category Name",
+                Executables = { new ExeMapping { Path = @"C:\x\ping.exe", FullName = "Ping" } } });
+            Config.Categories.Add(new CategoryMapping { Id = "3", Name = "Self-test Game Three",
                 Executables = { new ExeMapping { Path = @"C:\x\pwsh.exe", FullName = "PowerShell" } } });
+            await Task.Delay(500);
             Watcher.UpdateMappings(Config.Categories);
             Watcher.Start(DetectionMode.Launch);
             await Task.Delay(800);
@@ -143,8 +150,9 @@ public partial class App : Application
             await Task.Delay(500);
         }
         catch (Exception ex) { _selfTestError ??= ex; }
+        try { selfTestChild?.Kill(entireProcessTree: true); } catch { }
 
-        if (_selfTestError != null) { Console.Error.WriteLine(_selfTestError); SelfTestExit(1); }
+        if (_selfTestError != null) { LogError("selftest", _selfTestError); SelfTestExit(1); }
         else { Console.WriteLine("SELFTEST OK " + Updater.CurrentTag); SelfTestExit(0); }
     }
 

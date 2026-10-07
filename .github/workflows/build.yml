@@ -53,7 +53,11 @@ jobs:
             if (-not $p.WaitForExit(90000)) { $p.Kill(); throw "$exe --selftest timed out" }
             if ($p.ExitCode -ne 0) {
               $log = Join-Path $env:APPDATA "AutoSwitcher/error.log"
-              if (Test-Path $log) { Get-Content $log }
+              if (Test-Path $log) {
+                $text = (Get-Content $log -Raw)
+                Write-Host $text
+                Write-Host ("::error title=Self-test failed::" + ($text -replace "%","%25" -replace "`r","" -replace "`n","%0A"))
+              }
               throw "$exe --selftest failed with exit code $($p.ExitCode)"
             }
             Write-Host "$exe OK"

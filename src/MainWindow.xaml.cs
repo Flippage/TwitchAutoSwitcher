@@ -214,7 +214,7 @@ public partial class MainWindow : Window
         if (pending != null && !OnStream(pending)) _stack.Add(pending);
         if (hit != null && !OnStream(hit) && !_stack.Exists(g => Same(g, hit))) _stack.Add(hit);
         foreach (var r in App.Watcher.Running)
-            if (!OnStream(r) && !_stack.Exists(g => Same(g, r))) _stack.Add(r);
+            if (!OnStream(r) && !_stack.Exists(g => Same(g, r) || ReferenceEquals(g.Exe, r.Exe))) _stack.Add(r);
 
         // Keep the user's place; jump to a new pending switch when one starts.
         bool newPending = pending != null && !Same(pending, _lastPendingSeen);
