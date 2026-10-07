@@ -69,10 +69,11 @@
                                             <DataTemplate DataType="{x:Type local:ExeChip}">
                                                 <Border CornerRadius="6" Padding="8,3" Margin="0,4,6,0" Background="{Binding Background}"
                                                         ToolTip="{Binding Path}">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding Name}" FontSize="11.5" FontWeight="SemiBold" Foreground="{Binding Foreground}"/>
-                                                        <TextBlock Text="{Binding File}" Style="{StaticResource Mono}" FontSize="11" Margin="6,0,0,0" Foreground="#7A7A7A"/>
-                                                    </StackPanel>
+                                                    <!-- One TextBlock with two runs so name and file share a baseline -->
+                                                    <TextBlock FontSize="11.5">
+                                                        <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding Foreground, Mode=OneWay}"/>
+                                                        <Run Text="{Binding File, Mode=OneWay}" FontFamily="{StaticResource MonoFont}" FontSize="11" Foreground="#7A7A7A"/>
+                                                    </TextBlock>
                                                 </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
