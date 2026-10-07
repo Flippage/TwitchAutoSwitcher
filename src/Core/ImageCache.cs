@@ -33,6 +33,30 @@ public static class ImageCache
         return SizeSuffix.Replace(url, "-104x144$1");
     }
 
+    /// <summary>
+    /// Box art as a local file with a real image extension (Windows toasts only accept local images for
+    /// unpackaged apps). Reuses the disk cache; returns null if it can't be fetched.
+    /// </summary>
+    public static async Task<string?> GetFileAsync(string url)
+    {
+        try
+        {
+            if (url.Contains("boxart", StringComparison.OrdinalIgnoreCase) || url.Contains("{width}")) url = Normalize(url);
+            string hash = Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(url)));
+            string ext = Path.GetExtension(new Uri(url).AbsolutePath);
+            if (ext is not (".jpg" or ".jpeg" or ".png")) ext = ".jpg";
+            string toastFile = Path.Combine(Dir, hash + ext);
+            if (File.Exists(toastFile)) return toastFile;
+
+            string cached = Path.Combine(Dir, hash + ".img");
+            byte[] bytes = File.Exists(cached) ? await File.ReadAllBytesAsync(cached) : await Http.GetByteArrayAsync(url);
+            Directory.CreateDirectory(Dir);
+            await File.WriteAllBytesAsync(toastFile, bytes);
+            return toastFile;
+        }
+        catch { return null; }
+    }
+
     public static Task<ImageSource?> GetAsync(string url)
     {
         if (url.Contains("boxart", StringComparison.OrdinalIgnoreCase) || url.Contains("{width}")) url = Normalize(url);

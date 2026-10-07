@@ -42,6 +42,7 @@ public partial class App : Application
             args.Handled = true;   // never crash the tray app over a UI glitch
         };
 
+        Toasts.Init();   // AppUserModelID first, so the taskbar and notifications agree on who we are
         Config = ConfigStore.Load();
         Twitch = new TwitchService();
         Switcher = new Switcher(Config, Twitch);
@@ -51,7 +52,7 @@ public partial class App : Application
         Watcher.Exited += Switcher.OnExited;
 
         _tray = new TrayIcon();
-        Switcher.Toast += (title, text) => _tray?.ShowToast(title, text);
+        Switcher.Toast += info => _ = Toasts.ShowAsync(info, fallback: (h, b) => _tray?.ShowToast(h, b));
 
         var window = new MainWindow();
         MainWindow = window;

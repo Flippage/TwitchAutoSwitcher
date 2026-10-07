@@ -145,7 +145,8 @@ public partial class TitlesPage : UserControl
         ApplyNowBtn.IsEnabled = false;
         string title = Switcher.Render(TemplateBox.Template, v.Game, v.Full, v.Custom);
         var hit = App.Switcher.Current;
-        if (await App.Switcher.ApplyAsync(hit?.Category.Id, hit?.Category.Name, title, v.Custom))
+        if (await App.Switcher.ApplyAsync(hit?.Category.Id, hit?.Category.Name, title, v.Custom,
+                "Applied from Stream Titles", hit?.Category.BoxArtUrl))
             App.RememberTitle(TemplateBox.Template);
         UpdatePreview();
     }

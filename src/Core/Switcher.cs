@@ -10,6 +10,9 @@ namespace AutoSwitcher;
 /// So switching Ship of Harkinian → Project64 (same category) sends nothing unless the title's text changes
 /// (e.g. it uses %fullGameName% or %customName%).
 /// </summary>
+/// <summary>What a switch notification shows: heading, reason line, optional title line, box art.</summary>
+public sealed record ToastInfo(string Heading, string Body, string? Detail, string? BoxArtUrl);
+
 public sealed class Switcher
 {
     public const int MaxTitle = 140;
@@ -28,7 +31,7 @@ public sealed class Switcher
 
     /// <summary>Raised on the UI thread whenever state shown in the UI changes.</summary>
     public event Action? Changed;
-    public event Action<string, string>? Toast;
+    public event Action<ToastInfo>? Toast;
 
     public Switcher(AppConfig cfg, TwitchService tw)
     {
@@ -78,7 +81,8 @@ public sealed class Switcher
         Changed?.Invoke();
         if (!_cfg.AutoSwitch) return;
         string? title = _cfg.UpdateTitle ? RenderFor(hit) : null;
-        await ApplyAsync(hit.Category.Id, hit.Category.Name, title, hit.Exe.EffectiveCustom);
+        string reason = _cfg.Mode == DetectionMode.Focus ? "Auto-switched · focused window" : "Auto-switched · launched app";
+        await ApplyAsync(hit.Category.Id, hit.Category.Name, title, hit.Exe.EffectiveCustom, reason, hit.Category.BoxArtUrl);
     }
 
     public async void OnExited(GameHit hit)
@@ -88,7 +92,7 @@ public sealed class Switcher
         var f = _cfg.FallbackCategory;
         if (!_cfg.AutoSwitch || !_cfg.FallbackEnabled || string.IsNullOrEmpty(f.Id)) return;
         string? title = _cfg.UpdateTitle ? Render(_cfg.TitleTemplate, f.Name, f.Name, f.Name) : null;
-        await ApplyAsync(f.Id, f.Name, title, f.Name);
+        await ApplyAsync(f.Id, f.Name, title, f.Name, "Game closed · fallback category", f.BoxArtUrl);
     }
 
     /// <summary>Re-apply the current game (used when auto-switch is turned back on or the template changes).</summary>
@@ -97,7 +101,8 @@ public sealed class Switcher
         if (Current != null) OnActivated(Current);
     }
 
-    public async Task<bool> ApplyAsync(string? gameId, string? gameName, string? title, string? label = null)
+    public async Task<bool> ApplyAsync(string? gameId, string? gameName, string? title, string? label = null,
+                                       string? reason = null, string? boxArtUrl = null)
     {
         if (!_tw.IsSignedIn)
         {
@@ -136,8 +141,12 @@ public sealed class Switcher
 
             if (_cfg.Toasts)
             {
-                if (newGame != null) Toast?.Invoke($"Now playing: {label ?? gameName}", $"Category set to {gameName}");
-                else Toast?.Invoke("Stream title updated", newTitle!);
+                if (newGame != null)
+                    Toast?.Invoke(new ToastInfo(gameName ?? "Category changed", reason ?? "Twitch category updated",
+                        newTitle, boxArtUrl));
+                else
+                    Toast?.Invoke(new ToastInfo("Stream title updated", newTitle!, null,
+                        boxArtUrl ?? Current?.Category.BoxArtUrl));
             }
             return true;
         }

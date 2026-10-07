@@ -177,7 +177,8 @@ public partial class ManualPage : UserControl
         App.SetAutoSwitch(false);
         SetStatus("Updating Twitch…", error: false);
         string? rendered = title != null ? Rendered() : null;   // fill %variables% before sending
-        bool ok = await App.Switcher.ApplyAsync(gameId, gameName, rendered, gameName);
+        bool ok = await App.Switcher.ApplyAsync(gameId, gameName, rendered, gameName, "Set manually",
+            Picker.Selected?.Id == gameId ? Picker.Selected?.BoxArtUrl : null);
         if (ok)
         {
             if (title != null) App.RememberTitle(title);              // keep the template, variables included
