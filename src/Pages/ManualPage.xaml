@@ -60,24 +60,28 @@
                     <TextBlock x:Name="Counter" DockPanel.Dock="Right" Style="{StaticResource Sub}"/>
                     <TextBlock Text="STREAM TITLE" Style="{StaticResource Caps}"/>
                 </DockPanel>
-                <TextBox x:Name="TitleBox" Style="{StaticResource TextArea}" MaxLength="300" Tag="Stream title"
+                <TextBox x:Name="TitleBox" Style="{StaticResource TextArea}" Tag="Stream title"
                          TextChanged="TitleBox_TextChanged"/>
-                <WrapPanel Margin="0,10,0,0">
-                    <TextBlock Text="Insert:" Style="{StaticResource Sub}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <Button x:Name="VarGame" Style="{StaticResource ChipButton}" Content="%gameName%" Tag="%gameName%"
-                            Click="Insert_Click" Margin="0,0,6,0"/>
-                    <Button x:Name="VarFull" Style="{StaticResource ChipButton}" Content="%fullGameName%" Tag="%fullGameName%"
-                            Click="Insert_Click" Margin="0,0,6,0"/>
-                    <Button x:Name="VarCustom" Style="{StaticResource ChipButton}" Content="%customName%" Tag="%customName%"
-                            Click="Insert_Click"/>
+                <TextBlock x:Name="OverflowNote" Style="{StaticResource Sub}" Foreground="{StaticResource DangerBrush}"
+                           Margin="2,6,0,0" Visibility="Collapsed"
+                           Text="Twitch titles max out at 140 characters. The highlighted part will be cut off."/>
+                <WrapPanel x:Name="GamePanel" Margin="0,10,0,0">
+                    <TextBlock Text="Insert game:" Style="{StaticResource Sub}" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                    <ItemsControl x:Name="GamePills">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource ChipButton}" FontFamily="{StaticResource UiFont}" Content="{Binding}"
+                                        CommandParameter="{Binding}" Click="InsertGame_Click" Margin="0,0,6,6"
+                                        ToolTip="Insert at the cursor"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </WrapPanel>
-                <Border Margin="0,10,0,0" Padding="14,10" CornerRadius="10" Background="{StaticResource FieldDeepBrush}"
-                        BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock x:Name="PreviewLabel" Style="{StaticResource Caps}" FontSize="10.5"/>
-                        <TextBlock x:Name="Preview" FontSize="13.5" TextWrapping="Wrap" Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Border>
                 <WrapPanel x:Name="RecentPanel" Margin="0,10,0,0">
                     <TextBlock Text="Recent:" Style="{StaticResource Sub}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <ItemsControl x:Name="RecentList">

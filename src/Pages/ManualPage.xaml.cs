@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,12 +10,13 @@ public partial class ManualPage : UserControl
 {
     private string? _artForGameId;
     private bool _titlePrefilled;
+    private OverflowHighlighter? _highlighter;
 
     public ManualPage()
     {
         InitializeComponent();
         App.Switcher.Changed += () => Dispatcher.InvokeAsync(UpdateView);
-        Picker.SelectionChanged += _ => UpdateCounter();
+        Loaded += (_, _) => _highlighter ??= OverflowHighlighter.Attach(TitleBox, Switcher.MaxTitle);
         IsVisibleChanged += async (_, e) =>
         {
             if (!(bool)e.NewValue) return;
@@ -74,6 +76,7 @@ public partial class ManualPage : UserControl
         RecentList.ItemsSource = App.Config.RecentTitles;
         RecentPanel.Visibility = App.Config.RecentTitles.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateCounter();
+        UpdateGamePills();
     }
 
     private async Task LoadArtAsync(string gameId)
@@ -89,56 +92,45 @@ public partial class ManualPage : UserControl
     }
 
     /// <summary>
-    /// Values for the title variables in manual mode:
-    /// %gameName% = the category you picked here, else the detected game's category, else what's on Twitch now.
-    /// %fullGameName% / %customName% = the detected exe's names when it belongs to that category, else the category name.
+    /// Older saved titles may still contain %variables%; fill them from the picked/detected game so
+    /// Twitch never receives them literally.
     /// </summary>
-    private (string Game, string Full, string Custom, string Source) Vars()
+    private string Rendered()
     {
         var hit = App.Switcher.Current;
         var picked = Picker.Selected;
         string game = picked?.Name ?? hit?.Category.Name ?? App.Switcher.Live?.GameName ?? "";
         bool exeMatches = hit != null && (picked == null || picked.Id == hit.Category.Id);
-        if (exeMatches)
-            return (game, hit!.Exe.FullName, hit.Exe.EffectiveCustom, hit.Exe.FullName);
-        return (game, game, game, picked != null ? "selected category" : "current Twitch category");
-    }
-
-    private string Rendered()
-    {
-        var v = Vars();
-        return Switcher.Render(TitleBox.Text, v.Game, v.Full, v.Custom);
+        string full = exeMatches ? hit!.Exe.FullName : game;
+        string custom = exeMatches ? hit!.Exe.EffectiveCustom : game;
+        return Switcher.Render(TitleBox.Text, game, full, custom);
     }
 
     private void UpdateCounter()
     {
-        var v = Vars();
-        string text = Switcher.Render(TitleBox.Text, v.Game, v.Full, v.Custom);   // clipped to 140
-        int len = TitleBox.Text                                                         // unclipped length
-            .Replace("%gameName%", v.Game, System.StringComparison.OrdinalIgnoreCase)
-            .Replace("%fullGameName%", v.Full, System.StringComparison.OrdinalIgnoreCase)
-            .Replace("%customName%", v.Custom, System.StringComparison.OrdinalIgnoreCase)
-            .Trim().Length;
+        int len = TitleBox.Text.Length;
+        bool over = len > Switcher.MaxTitle;
         Counter.Text = $"{len} / {Switcher.MaxTitle}";
-        Counter.Foreground = (Brush)FindResource(len > Switcher.MaxTitle ? "DangerBrush" : "SubBrush");
-
-        PreviewLabel.Text = len > Switcher.MaxTitle
-            ? "PREVIEW · WILL BE CUT TO 140 CHARACTERS"
-            : "PREVIEW · USING " + v.Source.ToUpperInvariant();
-        Preview.Text = text.Length == 0 ? "—" : text;
-
-        VarGame.ToolTip = string.IsNullOrEmpty(v.Game) ? "Twitch category" : v.Game;
-        VarFull.ToolTip = string.IsNullOrEmpty(v.Full) ? "Executable's full name" : v.Full;
-        VarCustom.ToolTip = string.IsNullOrEmpty(v.Custom) ? "Your custom name (falls back to full name)" : v.Custom;
+        Counter.Foreground = (Brush)FindResource(over ? "DangerBrush" : "SubBrush");
+        OverflowNote.Visibility = over ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void Insert_Click(object sender, RoutedEventArgs e)
+    private void UpdateGamePills()
     {
-        if (sender is not Button { Tag: string token }) return;
-        int caret = TitleBox.CaretIndex;
-        TitleBox.Text = TitleBox.Text.Insert(caret, token);
+        var names = App.Config.Categories.Select(c => c.Name).Where(n => !string.IsNullOrWhiteSpace(n))
+            .Distinct(System.StringComparer.OrdinalIgnoreCase).ToList();
+        GamePills.ItemsSource = names;
+        GamePanel.Visibility = names.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void InsertGame_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { CommandParameter: string name }) return;
+        int caret = TitleBox.SelectionStart;
+        string text = TitleBox.Text.Remove(caret, TitleBox.SelectionLength);   // typing over a selection replaces it
+        TitleBox.Text = text.Insert(caret, name);
         TitleBox.Focus();
-        TitleBox.CaretIndex = caret + token.Length;
+        TitleBox.CaretIndex = caret + name.Length;
     }
 
     private void TitleBox_TextChanged(object sender, TextChangedEventArgs e) => UpdateCounter();
