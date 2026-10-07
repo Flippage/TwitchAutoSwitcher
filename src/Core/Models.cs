@@ -7,7 +7,6 @@ public enum DetectionMode { Focus, Launch }
 
 public sealed class AppConfig
 {
-    public string ClientId { get; set; } = "";
     public bool AutoSwitch { get; set; } = true;
     public DetectionMode Mode { get; set; } = DetectionMode.Focus;
     public int FocusDelaySeconds { get; set; } = 8;

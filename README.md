@@ -6,7 +6,7 @@ Sets your Twitch **category** and **stream title** automatically from the game y
 - **Title template** with `%gameName%`, `%fullGameName%`, `%customName%`.
 - Two detection modes: **game launches** or **game window is focused** (with a configurable delay so clicking back and forth doesn't spam Twitch).
 - **Manual mode** to set category/title yourself (pauses auto-switch).
-- Twitch login with OAuth **Device Code** flow; stays signed in.
+- One-click Twitch login (OAuth **Device Code** flow, Client ID built in); stays signed in.
 - Tray icon, start with Windows, optional toast on every switch.
 
 ## Title variables
@@ -19,14 +19,9 @@ Sets your Twitch **category** and **stream title** automatically from the game y
 
 **Update rule:** on every switch the app builds the target category and filled-in title, compares them with what's live on Twitch, and only sends what changed. Switching between two exes of the same category sends nothing, unless the title's text differs (because it uses `%fullGameName%` or `%customName%`).
 
-## First-time setup (once per streamer)
+## First-time setup
 
-1. Go to <https://dev.twitch.tv/console/apps/create> (log in with Twitch, enable 2FA if asked).
-2. **Name:** anything unique, e.g. `AutoSwitcher-mercy`.
-   **OAuth Redirect URL:** `http://localhost` (required by the form, not used).
-   **Category:** Application Integration. **Client Type: Public** ← important.
-3. Create, copy the **Client ID**, paste it into AutoSwitcher → Account.
-4. Click **Connect with Twitch**, approve the code on twitch.tv/activate. Done.
+Open AutoSwitcher → **Account** → **Connect with Twitch**, then approve the code on twitch.tv/activate. That's it. The app's Twitch Client ID is built in (public client, no secret), so there's nothing to register or paste.
 
 The only permission requested is `channel:manage:broadcast` (edit title and category).
 

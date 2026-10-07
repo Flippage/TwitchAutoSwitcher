@@ -30,14 +30,14 @@ public sealed class TwitchService
 
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
-    public string ClientId { get; set; }
+    /// <summary>Public client (no secret). Registered as "TwitchGameAutoSwitcher" on dev.twitch.tv.</summary>
+    public const string ClientId = "q27xh0as8wnpw5ei4ckwgqzxlgjakm";
     public TokenSet? Tokens { get; private set; }
     public bool IsSignedIn => Tokens != null;
     public event Action? AuthChanged;
 
-    public TwitchService(string clientId)
+    public TwitchService()
     {
-        ClientId = clientId;
         Tokens = ConfigStore.LoadTokens();
     }
 
@@ -46,7 +46,7 @@ public sealed class TwitchService
     /// <summary>On startup: refresh (rolls the 30-day public-client refresh token) and load the profile.</summary>
     public async Task InitAsync()
     {
-        if (Tokens == null || string.IsNullOrEmpty(ClientId)) return;
+        if (Tokens == null) return;
         await RefreshAsync(force: true);
         if (Tokens != null) await LoadUserAsync();
         AuthChanged?.Invoke();

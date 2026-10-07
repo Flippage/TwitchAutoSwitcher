@@ -42,7 +42,7 @@ public partial class App : Application
         };
 
         Config = ConfigStore.Load();
-        Twitch = new TwitchService(Config.ClientId);
+        Twitch = new TwitchService();
         Switcher = new Switcher(Config, Twitch);
         Watcher = new GameWatcher { FocusDelay = TimeSpan.FromSeconds(Config.FocusDelaySeconds) };
         Watcher.UpdateMappings(Config.Categories);

@@ -5,22 +5,6 @@
         <StackPanel Margin="32,26,32,24">
             <TextBlock Text="Account" Style="{StaticResource H1}"/>
 
-            <!-- One-time: Twitch application Client ID -->
-            <Border x:Name="SetupCard" Style="{StaticResource Card}" Padding="24" Margin="0,20,0,0">
-                <StackPanel>
-                    <TextBlock Text="One-time setup: Twitch Client ID" FontSize="18" FontWeight="Bold"/>
-                    <TextBlock Style="{StaticResource Sub}" FontSize="13.5" Margin="0,8,0,0" Foreground="#B5B5B5"
-                               Text="AutoSwitcher talks to Twitch as your own small 'application'. Create it once (free, takes a minute):"/>
-                    <TextBlock Style="{StaticResource Sub}" FontSize="13.5" Margin="0,10,0,0" Foreground="{StaticResource Text2Brush}"
-                               LineHeight="22"
-                               Text="1.  Open the Twitch developer console and click 'Register Your Application'.&#10;2.  Name: anything (e.g. AutoSwitcher-yourname). OAuth Redirect URL: http://localhost&#10;3.  Category: Application Integration.  Client Type: Public.&#10;4.  Create, then copy the Client ID and paste it below."/>
-                    <DockPanel Margin="0,16,0,0">
-                        <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Content="Save" Click="SaveClientId_Click" Margin="10,0,0,0"/>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource OutlineButton}" Content="Open developer console" Click="OpenConsole_Click" Margin="10,0,0,0"/>
-                        <TextBox x:Name="ClientIdSetupBox" Style="{StaticResource Field}" Tag="Paste Client ID"/>
-                    </DockPanel>
-                </StackPanel>
-            </Border>
 
             <!-- Signed out: device code login -->
             <Border x:Name="SignedOutCard" Style="{StaticResource Card}" Padding="24" Margin="0,20,0,0">
@@ -98,16 +82,10 @@
             </Border>
 
             <!-- Advanced -->
-            <TextBlock Text="ADVANCED" Style="{StaticResource Caps}" Margin="0,26,0,8"/>
+            <TextBlock Text="STORAGE" Style="{StaticResource Caps}" Margin="0,26,0,8"/>
             <Border Style="{StaticResource Card}" Padding="20,16">
                 <StackPanel>
-                    <TextBlock Text="Twitch Client ID" Style="{StaticResource ItemTitle}"/>
-                    <TextBlock Text="Changing this disconnects your account." Style="{StaticResource Sub}" Margin="0,2,0,10"/>
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Save" Click="SaveClientIdAdvanced_Click" Margin="10,0,0,0"/>
-                        <TextBox x:Name="ClientIdBox" Style="{StaticResource Field}" FontFamily="{StaticResource MonoFont}" Tag="Client ID"/>
-                    </DockPanel>
-                    <TextBlock Style="{StaticResource Sub}" Margin="0,12,0,0">
+                    <TextBlock Style="{StaticResource Sub}">
                         <Run Text="Settings are stored in "/><Run x:Name="ConfigPathRun" FontFamily="{StaticResource MonoFont}"/><Run Text=". Tokens are encrypted for your Windows user (DPAPI)."/>
                     </TextBlock>
                 </StackPanel>

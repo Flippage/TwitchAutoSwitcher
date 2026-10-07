@@ -28,12 +28,9 @@ public partial class AccountPage : UserControl
 
     private void UpdateView()
     {
-        bool hasClient = !string.IsNullOrWhiteSpace(App.Config.ClientId);
         bool signedIn = App.Twitch.IsSignedIn;
-
-        SetupCard.Visibility = hasClient ? Visibility.Collapsed : Visibility.Visible;
-        SignedOutCard.Visibility = hasClient && !signedIn ? Visibility.Visible : Visibility.Collapsed;
-        SignedInCard.Visibility = hasClient && signedIn ? Visibility.Visible : Visibility.Collapsed;
+        SignedOutCard.Visibility = signedIn ? Visibility.Collapsed : Visibility.Visible;
+        SignedInCard.Visibility = signedIn ? Visibility.Visible : Visibility.Collapsed;
 
         if (signedIn)
         {
@@ -46,33 +43,12 @@ public partial class AccountPage : UserControl
         _loading = true;
         StartupToggle.IsChecked = App.Config.StartWithWindows;
         TrayToggle.IsChecked = App.Config.CloseToTray;
-        if (!ClientIdBox.IsKeyboardFocusWithin) ClientIdBox.Text = App.Config.ClientId;
         _loading = false;
     }
-
-    // ------------------------------------------------------------ client id
 
     private static void OpenUrl(string url)
     {
         try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); } catch { }
-    }
-
-    private void OpenConsole_Click(object sender, RoutedEventArgs e) => OpenUrl("https://dev.twitch.tv/console/apps/create");
-
-    private void SaveClientId_Click(object sender, RoutedEventArgs e) => _ = SetClientIdAsync(ClientIdSetupBox.Text);
-
-    private void SaveClientIdAdvanced_Click(object sender, RoutedEventArgs e) => _ = SetClientIdAsync(ClientIdBox.Text);
-
-    private async Task SetClientIdAsync(string raw)
-    {
-        string id = raw.Trim();
-        if (id == App.Config.ClientId) return;
-        if (App.Twitch.IsSignedIn) await App.Twitch.SignOutAsync();
-        App.Config.ClientId = id;
-        App.Twitch.ClientId = id;
-        App.SaveConfig();
-        UpdateView();
-        App.Switcher.RaiseChanged();
     }
 
     // ------------------------------------------------------------ device code login
@@ -110,9 +86,7 @@ public partial class AccountPage : UserControl
         {
             StopDeviceFlow();
             ShowLoginError("Couldn't connect: " + ex.Message +
-                           (ex.Message.Contains("client", StringComparison.OrdinalIgnoreCase)
-                               ? " — check the Client ID and that the app's Client Type is Public."
-                               : ""));
+                           " Check your internet connection and try again.");
         }
     }
 
