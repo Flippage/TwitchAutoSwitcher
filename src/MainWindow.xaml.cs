@@ -303,7 +303,7 @@ public partial class MainWindow : Window
     /// Largest font size (from <paramref name="sizes"/>, biggest first) at which the text fits in
     /// <paramref name="maxLines"/> lines; at the smallest size anything left over is trimmed with "…".
     /// </summary>
-    private static void FitText(TextBlock tb, string text, double width, double[] sizes, int maxLines)
+    private static void FitText(System.Windows.Controls.TextBlock tb, string text, double width, double[] sizes, int maxLines)
     {
         tb.Text = text;
         double w = tb.ActualWidth > 20 ? tb.ActualWidth : width;
