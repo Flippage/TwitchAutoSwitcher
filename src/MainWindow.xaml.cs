@@ -121,6 +121,7 @@ public partial class MainWindow : Window
 
         if (hit != null)
         {
+            _liveArtId = null;
             NowGame.Text = hit.Category.Name;
             NowExe.Text = hit.Exe.FullName;
             NowExe.Visibility = string.Equals(hit.Exe.FullName, hit.Category.Name, StringComparison.OrdinalIgnoreCase)
@@ -129,8 +130,20 @@ public partial class MainWindow : Window
             NowArtIdle.Visibility = Visibility.Collapsed;
             NowCard.ToolTip = $"{hit.Exe.FullName} ({hit.Exe.FileName}) → {hit.Category.Name}";
         }
+        else if (App.Switcher.Live is { } live && !string.IsNullOrEmpty(live.GameName))
+        {
+            // Nothing mapped is running: show what's actually set on the channel.
+            NowLabel.Text = cfg.AutoSwitch ? "ON TWITCH NOW" : "PAUSED · ON TWITCH NOW";
+            NowGame.Text = live.GameName;
+            NowExe.Text = "No mapped game detected";
+            NowExe.Visibility = Visibility.Visible;
+            NowArtIdle.Visibility = Visibility.Collapsed;
+            NowCard.ToolTip = "Current Twitch category. Launch or focus a mapped game to switch.";
+            _ = ShowLiveArtAsync(live.GameId);
+        }
         else
         {
+            _liveArtId = null;
             NowGame.Text = cfg.Categories.Count == 0 ? "No games mapped yet" : "Waiting for a game…";
             NowExe.Text = cfg.Categories.Count == 0 ? "Add one on Mappings" : "Launch or focus a mapped game";
             NowExe.Visibility = Visibility.Visible;
@@ -139,11 +152,36 @@ public partial class MainWindow : Window
             NowArtIdle.Visibility = Visibility.Visible;
             NowCard.ToolTip = null;
         }
-        NowGame.Foreground = (System.Windows.Media.Brush)FindResource(hit != null ? "TextBrush" : "Text2Brush");
+        NowGame.Foreground = (System.Windows.Media.Brush)FindResource(
+            hit != null || !string.IsNullOrEmpty(App.Switcher.Live?.GameName) ? "TextBrush" : "Text2Brush");
 
         string? err = App.Switcher.LastError;
         NowError.Text = err ?? "";
         NowError.Visibility = string.IsNullOrEmpty(err) ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private string? _liveArtId;
+    private readonly System.Collections.Generic.Dictionary<string, string> _artById = new();
+
+    /// <summary>Box art for the channel's current category: from a mapping if we have it, else one Helix call (cached).</summary>
+    private async System.Threading.Tasks.Task ShowLiveArtAsync(string gameId)
+    {
+        if (string.IsNullOrEmpty(gameId) || _liveArtId == gameId) return;
+        _liveArtId = gameId;
+        if (!_artById.TryGetValue(gameId, out var url))
+        {
+            url = App.Config.Categories.Find(c => c.Id == gameId)?.BoxArtUrl ?? "";
+            if (url.Length == 0)
+            {
+                try { url = (await App.Twitch.GetGameAsync(gameId))?.BoxArtUrl ?? ""; } catch { url = ""; }
+            }
+            _artById[gameId] = url;
+        }
+        if (_liveArtId == gameId && App.Switcher.Current == null)
+        {
+            if (url.Length > 0) Art.SetUrl(NowArt, url);
+            NowArtIdle.Visibility = url.Length > 0 ? Visibility.Collapsed : Visibility.Visible;
+        }
     }
 
     private void SideAuto_Changed(object sender, RoutedEventArgs e)

@@ -82,7 +82,11 @@ public partial class App : Application
 
         // One tiny GET /streams per minute for the Live / Offline light.
         _statusTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(60) };
-        _statusTimer.Tick += async (_, _) => await Switcher.RefreshStreamStatusAsync();
+        _statusTimer.Tick += async (_, _) =>
+        {
+            await Switcher.RefreshStreamStatusAsync();
+            await Switcher.RefreshLiveAsync();     // picks up category/title changes made on the Twitch dashboard
+        };
         _statusTimer.Start();
         Twitch.AuthChanged += () => Dispatcher.InvokeAsync(async () => await Switcher.RefreshStreamStatusAsync());
     }
