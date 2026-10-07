@@ -54,6 +54,7 @@
 
                 <StackPanel>
                     <RadioButton x:Name="NavMappings" Style="{StaticResource NavButton}" Content="Mappings" Tag="{StaticResource IconHome}" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavTitles" Style="{StaticResource NavButton}" Content="Stream Titles" Tag="{StaticResource IconTitles}" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavManual" Style="{StaticResource NavButton}" Content="Manual" Tag="{StaticResource IconPencil}" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavAccount" Style="{StaticResource NavButton}" Content="Account" Tag="{StaticResource IconUser}" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavBehaviour" Style="{StaticResource NavButton}" Content="Behaviour" Tag="{StaticResource IconSliders}" Checked="Nav_Checked"/>

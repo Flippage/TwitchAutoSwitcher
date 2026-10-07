@@ -1,0 +1,67 @@
+<UserControl x:Class="AutoSwitcher.TitlesPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AutoSwitcher">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="32,26,32,24">
+            <DockPanel>
+                <CheckBox x:Name="UpdateTitleToggle" DockPanel.Dock="Right" Style="{StaticResource Toggle}" VerticalAlignment="Center"
+                          Checked="UpdateTitle_Changed" Unchecked="UpdateTitle_Changed">
+                    <TextBlock Text="Update title on switch" Foreground="{StaticResource Text2Brush}" FontSize="14"/>
+                </CheckBox>
+                <TextBlock Text="Stream Titles" Style="{StaticResource H1}" VerticalAlignment="Center"/>
+            </DockPanel>
+
+            <!-- Template, length/apply, live preview -->
+            <Border Margin="0,18,0,0" Style="{StaticResource Card}">
+                <StackPanel>
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <TextBlock Text="Insert:" Style="{StaticResource Sub}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Button Style="{StaticResource ChipButton}" FontFamily="{StaticResource UiFont}" Content="+ Game Name"
+                                Tag="%gameName%" Click="Insert_Click" Margin="0,0,6,0"
+                                ToolTip="The Twitch category, e.g. The Legend of Zelda: Ocarina of Time"/>
+                        <Button Style="{StaticResource ChipButton}" FontFamily="{StaticResource UiFont}" Content="+ Game Executable Name"
+                                Tag="%fullGameName%" Click="Insert_Click" Margin="0,0,6,0"
+                                ToolTip="The executable's full name, e.g. Ship of Harkinian"/>
+                        <Button Style="{StaticResource ChipButton}" FontFamily="{StaticResource UiFont}" Content="+ Custom Name"
+                                Tag="%customName%" Click="Insert_Click"
+                                ToolTip="Your custom name, e.g. Zelda OoT SoH (falls back to the executable name)"/>
+                    </StackPanel>
+                    <TextBlock Text="TITLE TEMPLATE" Style="{StaticResource Caps}" VerticalAlignment="Center"/>
+                </DockPanel>
+                <local:TemplateEditor x:Name="TemplateBox" Margin="0,10,0,0"
+                                      PlaceholderText="e.g. Currently Playing: [Custom Name] | !multiworld"/>
+
+                <!-- Directly under the editor: filled-in length + apply -->
+                <DockPanel Margin="0,10,0,0">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <TextBlock x:Name="Counter" Style="{StaticResource Sub}" VerticalAlignment="Center"
+                                   ToolTip="Length after names are filled in. Twitch allows 140."/>
+                        <Button x:Name="ApplyNowBtn" Style="{StaticResource PillButton}" Content="Apply now"
+                                Click="ApplyNow_Click" Margin="12,0,0,0"/>
+                    </StackPanel>
+                </DockPanel>
+
+                <TextBlock Text="LIVE TITLE PREVIEW" Style="{StaticResource Caps}" Margin="0,18,0,8"/>
+                <Border CornerRadius="10" Padding="16,9" MinHeight="44" BorderThickness="1"
+                        BorderBrush="#232323" Background="#121212">
+                    <TextBlock x:Name="Preview" FontSize="14" TextWrapping="Wrap" LineHeight="26" VerticalAlignment="Center"/>
+                </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Recent titles -->
+            <Border x:Name="RecentRow" Margin="0,16,0,0" Style="{StaticResource Card}">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,10">
+                        <TextBlock DockPanel.Dock="Right" Text="Click one to use it as your template" Style="{StaticResource Sub}"/>
+                        <TextBlock Text="RECENT TITLES" Style="{StaticResource Caps}"/>
+                    </DockPanel>
+                    <!-- Items are built in code: one full-width row per title, name pills shown as pills -->
+                    <ItemsControl x:Name="RecentTitles" Focusable="False"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

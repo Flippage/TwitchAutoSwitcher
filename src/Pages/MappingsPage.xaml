@@ -6,7 +6,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -29,6 +28,10 @@
             <DockPanel>
                 <CheckBox x:Name="AutoToggle" DockPanel.Dock="Right" Style="{StaticResource Toggle}" Content="Auto-switch"
                           Checked="AutoToggle_Changed" Unchecked="AutoToggle_Changed"/>
+                <Button x:Name="TitleLink" DockPanel.Dock="Right" Style="{StaticResource PillButton}" Margin="0,0,16,0"
+                        Click="TitleLink_Click" ToolTip="Stream title settings">
+                    <TextBlock><Run Text="Title: " Foreground="{StaticResource SubBrush}"/><Run x:Name="TitleState" Text="auto"/></TextBlock>
+                </Button>
                 <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="{StaticResource SubBrush}" DockPanel.Dock="Left"
                          VerticalAlignment="Center" Margin="0,0,16,0"/>
                 <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
@@ -40,57 +43,8 @@
             </DockPanel>
         </Border>
 
-        <!-- Title template -->
-        <Border Grid.Row="2" Margin="0,16,0,0" Style="{StaticResource Card}">
-            <StackPanel>
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <TextBlock Text="Insert:" Style="{StaticResource Sub}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <Button Style="{StaticResource ChipButton}" FontFamily="{StaticResource UiFont}" Content="+ Game Name"
-                                Tag="%gameName%" Click="Insert_Click" Margin="0,0,6,0"
-                                ToolTip="The Twitch category, e.g. The Legend of Zelda: Ocarina of Time"/>
-                        <Button Style="{StaticResource ChipButton}" FontFamily="{StaticResource UiFont}" Content="+ Game Executable Name"
-                                Tag="%fullGameName%" Click="Insert_Click" Margin="0,0,6,0"
-                                ToolTip="The executable's full name, e.g. Ship of Harkinian"/>
-                        <Button Style="{StaticResource ChipButton}" FontFamily="{StaticResource UiFont}" Content="+ Custom Name"
-                                Tag="%customName%" Click="Insert_Click"
-                                ToolTip="Your custom name, e.g. Zelda OoT SoH (falls back to the executable name)"/>
-                    </StackPanel>
-                    <TextBlock Text="STREAM TITLE TEMPLATE" Style="{StaticResource Caps}" VerticalAlignment="Center"/>
-                </DockPanel>
-                <local:TemplateEditor x:Name="TemplateBox" Margin="0,10,0,0"
-                                      PlaceholderText="e.g. Currently Playing: [Custom Name] | !multiworld"/>
-
-                <!-- Directly under the editor: switch behaviour on the left, length + apply on the right -->
-                <DockPanel Margin="0,10,0,0">
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <TextBlock x:Name="Counter" Style="{StaticResource Sub}" VerticalAlignment="Center"
-                                   ToolTip="Length after names are filled in. Twitch allows 140."/>
-                        <Button x:Name="ApplyNowBtn" Style="{StaticResource PillButton}" Content="Apply now"
-                                Click="ApplyNow_Click" Margin="12,0,0,0"/>
-                    </StackPanel>
-                    <CheckBox x:Name="UpdateTitleToggle" Style="{StaticResource Toggle}" HorizontalAlignment="Left"
-                              Checked="UpdateTitle_Changed" Unchecked="UpdateTitle_Changed">
-                        <TextBlock Text="Update title on switch" Foreground="{StaticResource Text2Brush}" FontSize="13.5"/>
-                    </CheckBox>
-                </DockPanel>
-
-                <TextBlock Text="LIVE TITLE PREVIEW" Style="{StaticResource Caps}" Margin="0,18,0,8"/>
-                <Border CornerRadius="10" Padding="16,9" MinHeight="44" BorderThickness="1"
-                        BorderBrush="#232323" Background="#121212">
-                    <TextBlock x:Name="Preview" FontSize="14" TextWrapping="Wrap" LineHeight="26" VerticalAlignment="Center"/>
-                </Border>
-
-                <StackPanel x:Name="RecentRow">
-                    <TextBlock Text="RECENT TITLES" Style="{StaticResource Caps}" Margin="0,18,0,8"/>
-                    <!-- Items are built in code: one full-width row per title, name pills shown as pills -->
-                    <ItemsControl x:Name="RecentTitles" Focusable="False"/>
-                </StackPanel>
-            </StackPanel>
-        </Border>
-
         <!-- Mappings list -->
-        <ScrollViewer Grid.Row="3" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="MapList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type local:CategoryRow}">
@@ -131,7 +85,7 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <StackPanel x:Name="EmptyState" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
+        <StackPanel x:Name="EmptyState" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
             <TextBlock Text="No games mapped yet" Style="{StaticResource ItemTitle}" HorizontalAlignment="Center"/>
             <TextBlock Text="Add a Twitch category and the executables that should switch to it." Style="{StaticResource Sub}"
                        HorizontalAlignment="Center" Margin="0,6,0,0"/>

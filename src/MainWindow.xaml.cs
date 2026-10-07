@@ -8,6 +8,7 @@ namespace AutoSwitcher;
 public partial class MainWindow : Window
 {
     private readonly MappingsPage _mappings = new();
+    private readonly TitlesPage _titles = new();
     private readonly ManualPage _manual = new();
     private readonly AccountPage _account = new();
     private readonly BehaviourPage _behaviour = new();
@@ -30,7 +31,8 @@ public partial class MainWindow : Window
     private void Nav_Checked(object sender, RoutedEventArgs e)
     {
         if (Host == null) return;
-        Host.Content = sender == NavManual ? _manual
+        Host.Content = sender == NavTitles ? _titles
+                     : sender == NavManual ? _manual
                      : sender == NavAccount ? _account
                      : sender == NavBehaviour ? _behaviour
                      : _mappings;
@@ -49,6 +51,7 @@ public partial class MainWindow : Window
     }
 
     public void GoToAccount() => NavAccount.IsChecked = true;
+    public void GoToTitles() => NavTitles.IsChecked = true;
 
     private void UpdateAccountChip()
     {
