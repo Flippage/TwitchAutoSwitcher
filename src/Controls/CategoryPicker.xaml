@@ -14,7 +14,7 @@
 
     <StackPanel>
         <Border x:Name="SelectedCard" Visibility="Collapsed" Margin="0,0,0,8" Padding="10" CornerRadius="12"
-                Background="{StaticResource AccentDimBrush}" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1">
+                Background="{StaticResource AccentDimBrush}" BorderBrush="{StaticResource AccentBrush}" BorderThickness="2">
             <DockPanel>
                 <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Tag="{StaticResource IconClose}"
                         ToolTip="Clear" Click="Clear_Click" VerticalAlignment="Center"/>
@@ -40,7 +40,7 @@
         <Popup x:Name="ResultsPopup" PlacementTarget="{Binding ElementName=Query}" Placement="Bottom" VerticalOffset="6"
                StaysOpen="True" AllowsTransparency="True" PopupAnimation="Fade" Focusable="False">
             <Border Width="{Binding ActualWidth, ElementName=Query}" Background="#1A1A1A"
-                    BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="12"
+                    BorderBrush="{StaticResource LineBrush}" BorderThickness="2" CornerRadius="12"
                     TextElement.FontFamily="{StaticResource UiFont}" TextElement.Foreground="{StaticResource TextBrush}">
                 <ListBox x:Name="Results" Style="{StaticResource ResultList}" Background="Transparent" MaxHeight="360"
                          ItemTemplate="{StaticResource ResultTemplate}"

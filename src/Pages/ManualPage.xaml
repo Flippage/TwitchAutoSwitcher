@@ -13,7 +13,7 @@
         <TextBlock Text="Manual stream info" Style="{StaticResource H1}"/>
 
         <!-- Banner: paused (warning) or info -->
-        <Border x:Name="Banner" Grid.Row="1" Margin="0,16,0,0" CornerRadius="12" Padding="16,10" BorderThickness="1">
+        <Border x:Name="Banner" Grid.Row="1" Margin="0,16,0,0" CornerRadius="12" Padding="16,10" BorderThickness="2">
             <DockPanel>
                 <Button x:Name="ResumeBtn" DockPanel.Dock="Right" Style="{StaticResource OutlineButton}" Content="Resume auto"
                         Click="Resume_Click" Foreground="{StaticResource WarnTextBrush}" BorderBrush="{StaticResource WarnLineBrush}"/>

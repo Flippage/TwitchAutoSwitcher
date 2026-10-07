@@ -26,7 +26,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Width="44" Height="56" CornerRadius="10" Margin="0,0,8,0" Background="#1F1F1F"
-                                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+                                                BorderBrush="{StaticResource LineBrush}" BorderThickness="2">
                                             <TextBlock Text="{Binding}" FontFamily="{StaticResource MonoFont}" FontSize="24" FontWeight="Bold"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>

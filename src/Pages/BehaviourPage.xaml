@@ -27,7 +27,7 @@
             <Border x:Name="DelayCard" Style="{StaticResource Card}" Margin="0,12,0,0">
                 <DockPanel>
                     <Border DockPanel.Dock="Right" Background="{StaticResource FieldDeepBrush}" BorderBrush="{StaticResource LineBrush}"
-                            BorderThickness="1" CornerRadius="24" Padding="2" VerticalAlignment="Center" Margin="16,0,0,0">
+                            BorderThickness="2" CornerRadius="24" Padding="1" VerticalAlignment="Center" Margin="16,0,0,0">
                         <StackPanel Orientation="Horizontal">
                             <Button Style="{StaticResource BtnBase}" Background="Transparent" Width="44" Padding="0" FontSize="20"
                                     Content="−" ToolTip="Decrease" Click="DelayDown_Click"/>

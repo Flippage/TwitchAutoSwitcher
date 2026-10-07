@@ -81,7 +81,7 @@
 
                     <Popup x:Name="RunningPopup" PlacementTarget="{Binding ElementName=PickRunningBtn}" Placement="Top"
                            StaysOpen="False" AllowsTransparency="True" VerticalOffset="-6">
-                        <Border Width="440" Background="#1A1A1A" BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                        <Border Width="440" Background="#1A1A1A" BorderBrush="{StaticResource LineBrush}" BorderThickness="2"
                                 CornerRadius="12" Padding="6">
                             <DockPanel>
                                 <TextBlock DockPanel.Dock="Top" Text="RUNNING APPS" Style="{StaticResource Caps}" Margin="10,6,0,6"/>

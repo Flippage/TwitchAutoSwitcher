@@ -24,7 +24,7 @@
 
         <!-- Now playing -->
         <Border Grid.Row="1" Margin="0,16,0,0" Style="{StaticResource Card}" Padding="18,14"
-                BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="1">
+                BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="2">
             <DockPanel>
                 <CheckBox x:Name="AutoToggle" DockPanel.Dock="Right" Style="{StaticResource Toggle}" Content="Auto-switch"
                           Checked="AutoToggle_Changed" Unchecked="AutoToggle_Changed"/>
