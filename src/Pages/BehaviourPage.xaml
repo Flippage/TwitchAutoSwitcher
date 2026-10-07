@@ -52,7 +52,7 @@
                         <CheckBox x:Name="TitleToggle" DockPanel.Dock="Right" Style="{StaticResource Toggle}" Checked="Pref_Changed" Unchecked="Pref_Changed"/>
                         <StackPanel>
                             <TextBlock Text="Update stream title on switch" Style="{StaticResource ItemTitle}"/>
-                            <TextBlock Text="Fills %gameName%, %fullGameName% and %customName% in your title template. Only sent when the text actually changes."
+                            <TextBlock Text="Fills the Game Name, Game Executable Name and Custom Name pills in your title template. Only sent when the text actually changes."
                                        Style="{StaticResource Sub}" Margin="0,2,0,0"/>
                         </StackPanel>
                     </DockPanel>

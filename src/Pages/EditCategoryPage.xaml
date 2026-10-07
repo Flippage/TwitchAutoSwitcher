@@ -24,10 +24,14 @@
 
             <!-- Left: category -->
             <DockPanel>
-                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Caps}" Margin="0,0,0,8">
-                    <Run Text="1 · TWITCH CATEGORY  "/><Run Text="%gameName%" Foreground="{StaticResource AccentBrush}"
-                         FontFamily="{StaticResource MonoFont}" FontWeight="Normal"/>
-                </TextBlock>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8" Height="24">
+                    <TextBlock Text="1 · TWITCH CATEGORY" Style="{StaticResource Caps}" VerticalAlignment="Center"/>
+                    <Border CornerRadius="10" Padding="9,2,9,3" Margin="10,0,0,0" VerticalAlignment="Center" Background="{StaticResource AccentDimBrush}"
+                            BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="1"
+                            ToolTip="Used for the Game Name pill in your stream title">
+                        <TextBlock Text="Game Name" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
+                    </Border>
+                </StackPanel>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <local:CategoryPicker x:Name="Picker" ResultsMaxHeight="380"/>
                 </ScrollViewer>
@@ -35,12 +39,19 @@
 
             <!-- Right: executables -->
             <DockPanel Grid.Column="2">
-                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-                    <TextBlock DockPanel.Dock="Right" FontFamily="{StaticResource MonoFont}" FontSize="11.5">
-                        <Run Text="%fullGameName%" Foreground="{StaticResource AccentBrush}"/><Run Text=" · " Foreground="{StaticResource SubBrush}"/><Run Text="%customName%" Foreground="{StaticResource AccentBrush}"/>
-                    </TextBlock>
-                    <TextBlock Text="2 · EXECUTABLES" Style="{StaticResource Caps}"/>
-                </DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8" Height="24">
+                    <TextBlock Text="2 · EXECUTABLES" Style="{StaticResource Caps}" VerticalAlignment="Center"/>
+                    <Border CornerRadius="10" Padding="9,2,9,3" Margin="10,0,0,0" VerticalAlignment="Center" Background="{StaticResource AccentDimBrush}"
+                            BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="1"
+                            ToolTip="Used for the Game Executable Name pill in your stream title">
+                        <TextBlock Text="Game Executable Name" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
+                    </Border>
+                    <Border CornerRadius="10" Padding="9,2,9,3" Margin="6,0,0,0" VerticalAlignment="Center" Background="{StaticResource AccentDimBrush}"
+                            BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="1"
+                            ToolTip="Used for the Custom Name pill in your stream title">
+                        <TextBlock Text="Custom Name" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
+                    </Border>
+                </StackPanel>
 
                 <StackPanel DockPanel.Dock="Bottom" Margin="0,4,0,0">
                     <Grid>
@@ -66,7 +77,7 @@
                         </Button>
                     </Grid>
                     <TextBlock Style="{StaticResource Sub}" Margin="2,10,0,0"
-                               Text="Full name is read from the exe's product info (falls back to the file name). Custom name falls back to the full name. Switching between these keeps the category; the title only changes if its filled-in text changes."/>
+                               Text="Game Executable Name is read from the exe's product info (falls back to the file name). Custom Name falls back to the Game Executable Name. Switching between these keeps the category; the title only changes if its filled-in text changes."/>
 
                     <Popup x:Name="RunningPopup" PlacementTarget="{Binding ElementName=PickRunningBtn}" Placement="Top"
                            StaysOpen="False" AllowsTransparency="True" VerticalOffset="-6">
@@ -108,13 +119,13 @@
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel>
-                                                        <TextBlock Text="FULL NAME · FROM EXE" Style="{StaticResource Caps}" FontSize="10"/>
+                                                        <TextBlock Text="GAME EXECUTABLE NAME" Style="{StaticResource Caps}" FontSize="10" ToolTip="Read from the exe's product info. You can edit it."/>
                                                         <TextBox Style="{StaticResource FlatField}" Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"
                                                                  Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="2">
                                                         <TextBlock Text="CUSTOM NAME" Style="{StaticResource Caps}" FontSize="10"/>
-                                                        <TextBox Style="{StaticResource FlatField}" Foreground="{StaticResource AccentBrush}" Tag="Uses full name"
+                                                        <TextBox Style="{StaticResource FlatField}" Foreground="{StaticResource AccentBrush}" Tag="Uses the executable name"
                                                                  Text="{Binding CustomName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                 </Grid>
