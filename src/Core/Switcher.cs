@@ -141,11 +141,15 @@ public sealed class Switcher
 
             if (_cfg.Toasts)
             {
-                if (newGame != null)
-                    Toast?.Invoke(new ToastInfo(gameName ?? "Category changed", reason ?? "Twitch category updated",
-                        newTitle, boxArtUrl));
+                // Windows toasts show up to 3 lines: heading + 2.
+                string game = gameName ?? "";
+                string how = reason ?? "Updated from AutoSwitcher";
+                if (newGame != null && newTitle != null)
+                    Toast?.Invoke(new ToastInfo("Stream category & title updated", $"{game} · {how}", newTitle, boxArtUrl));
+                else if (newGame != null)
+                    Toast?.Invoke(new ToastInfo("Stream category updated", game, how, boxArtUrl));
                 else
-                    Toast?.Invoke(new ToastInfo("Stream title updated", newTitle!, null,
+                    Toast?.Invoke(new ToastInfo("Stream title updated", newTitle!, reason,
                         boxArtUrl ?? Current?.Category.BoxArtUrl));
             }
             return true;
