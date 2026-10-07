@@ -14,7 +14,7 @@
                          VerticalAlignment="Center" FocusVisualStyle="{x:Null}"
                          TextChanged="Box_TextChanged" PreviewKeyDown="Box_PreviewKeyDown"
                          GotKeyboardFocus="Box_FocusChanged" LostKeyboardFocus="Box_FocusChanged">
-                <FlowDocument PagePadding="0" LineHeight="26"/>
+                <FlowDocument PagePadding="0"/>
             </RichTextBox>
         </Grid>
     </Border>

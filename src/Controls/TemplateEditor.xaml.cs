@@ -59,8 +59,9 @@ public partial class TemplateEditor : UserControl
         return new Border
         {
             CornerRadius = new CornerRadius(10),
-            Padding = new Thickness(9, 1, 9, 2),
+            Padding = new Thickness(9, 2, 9, 3),
             Margin = new Thickness(1, 0, 1, 0),
+            VerticalAlignment = VerticalAlignment.Center,
             Background = (Brush)app.FindResource("AccentDimBrush"),
             BorderBrush = (Brush)app.FindResource("AccentLineBrush"),
             BorderThickness = new Thickness(1),
@@ -68,6 +69,9 @@ public partial class TemplateEditor : UserControl
             {
                 Text = text,
                 FontSize = 12.5,
+                LineHeight = double.NaN,                                  // Block.LineHeight is inherited from the document; reset it
+                LineStackingStrategy = LineStackingStrategy.MaxHeight,
+                VerticalAlignment = VerticalAlignment.Center,
                 FontWeight = valueStyle ? FontWeights.Normal : FontWeights.SemiBold,
                 Foreground = (Brush)app.FindResource("AccentBrush"),
             },

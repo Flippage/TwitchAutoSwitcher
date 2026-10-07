@@ -61,31 +61,35 @@
                 <local:TemplateEditor x:Name="TemplateBox" Margin="0,10,0,10"
                                       PlaceholderText="e.g. Currently Playing: [Custom Name] | !multiworld"/>
                 <DockPanel>
-                    <CheckBox x:Name="UpdateTitleToggle" DockPanel.Dock="Right" Style="{StaticResource Toggle}" Content="Update title on switch"
-                              Checked="UpdateTitle_Changed" Unchecked="UpdateTitle_Changed" Margin="16,0,0,0"/>
-                    <Button x:Name="ApplyNowBtn" DockPanel.Dock="Right" Style="{StaticResource PillButton}" Content="Apply now"
-                            Click="ApplyNow_Click" Margin="12,0,0,0" ToolTip="Push this title for the current game right away"/>
-                    <TextBlock x:Name="Counter" DockPanel.Dock="Right" Style="{StaticResource Sub}" VerticalAlignment="Center" Margin="12,0,0,0"/>
-                    <TextBlock Text="Live title" Style="{StaticResource Sub}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <TextBlock x:Name="Preview" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock DockPanel.Dock="Left" Text="Live title" Style="{StaticResource Sub}" Margin="0,3,14,0" VerticalAlignment="Top"/>
+                    <TextBlock x:Name="Preview" FontSize="13" TextWrapping="Wrap" LineHeight="26" VerticalAlignment="Center"/>
                 </DockPanel>
-                <DockPanel x:Name="RecentRow" Margin="0,12,0,0">
-                    <TextBlock DockPanel.Dock="Left" Text="Recent" Style="{StaticResource Sub}" VerticalAlignment="Top" Margin="0,7,14,0"/>
-                    <ItemsControl x:Name="RecentTitles">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Style="{StaticResource PillButton}" CommandParameter="{Binding Text}" Click="Recent_Click"
-                                        Margin="0,0,6,6" MaxWidth="340" ToolTip="{Binding Tip}">
-                                    <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis"/>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                <DockPanel Margin="0,12,0,0">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                        <TextBlock x:Name="Counter" Style="{StaticResource Sub}" VerticalAlignment="Center"/>
+                        <Button x:Name="ApplyNowBtn" Style="{StaticResource PillButton}" Content="Apply now"
+                                Click="ApplyNow_Click" Margin="12,0,0,0"/>
+                        <CheckBox x:Name="UpdateTitleToggle" Style="{StaticResource Toggle}" Content="Update title on switch"
+                                  Checked="UpdateTitle_Changed" Unchecked="UpdateTitle_Changed" Margin="16,0,0,0"/>
+                    </StackPanel>
+                    <DockPanel x:Name="RecentRow" Margin="0,0,16,0">
+                        <TextBlock DockPanel.Dock="Left" Text="Recent" Style="{StaticResource Sub}" VerticalAlignment="Top" Margin="0,7,14,0"/>
+                        <ItemsControl x:Name="RecentTitles">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource PillButton}" CommandParameter="{Binding Text}" Click="Recent_Click"
+                                            Margin="0,0,6,6" MaxWidth="300" ToolTip="{Binding Tip}">
+                                        <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis"/>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DockPanel>
                 </DockPanel>
             </StackPanel>
         </Border>

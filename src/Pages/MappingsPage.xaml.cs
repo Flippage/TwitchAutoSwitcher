@@ -133,17 +133,8 @@ public partial class MappingsPage : UserControl
 
     private void UpdatePreview()
     {
-        var hit = App.Switcher.Current;
-        ExeMapping? exe = hit?.Exe;
-        CategoryMapping? cat = hit?.Category;
-        if (exe == null)
-        {
-            cat = App.Config.Categories.FirstOrDefault(c => c.Executables.Count > 0);
-            exe = cat?.Executables[0];
-        }
-        string game = cat?.Name ?? "Game Name";
-        string full = exe?.FullName ?? "Game Executable Name";
-        string custom = exe?.EffectiveCustom ?? "Custom Name";
+        var v = FillValues();
+        string game = v.Game, full = v.Full, custom = v.Custom;
         string template = TemplateBox.Template;
 
         // Live title: plain text with the filled-in values shown as pills.
@@ -170,8 +161,34 @@ public partial class MappingsPage : UserControl
         Preview.ToolTip = text;
         Counter.Text = $"{len} / {Switcher.MaxTitle}";
         Counter.Foreground = (Brush)FindResource(len > Switcher.MaxTitle ? "DangerBrush" : "SubBrush");
-        ApplyNowBtn.IsEnabled = hit != null && App.Twitch.IsSignedIn;
+        ApplyNowBtn.IsEnabled = v.Real && App.Twitch.IsSignedIn && template.Trim().Length > 0;
+        ApplyNowBtn.ToolTip = !App.Twitch.IsSignedIn ? "Connect your Twitch account first (Account page)."
+            : !v.Real ? "Nothing to fill in yet: launch a mapped game, or set a category on Twitch."
+            : $"Send this title to Twitch now, filled in for {v.Source}.";
         UpdateRecent();
+    }
+
+    /// <summary>
+    /// What the template variables become right now, in priority order:
+    ///  1. the mapped game AutoSwitcher detected,
+    ///  2. the category currently set on Twitch (using that category's first mapped exe for the exe/custom names),
+    ///  3. placeholder labels (preview only; Apply now stays disabled).
+    /// </summary>
+    private (string Game, string Full, string Custom, bool Real, string Source) FillValues()
+    {
+        var hit = App.Switcher.Current;
+        if (hit != null)
+            return (hit.Category.Name, hit.Exe.FullName, hit.Exe.EffectiveCustom, true, hit.Exe.FullName);
+
+        var live = App.Switcher.Live;
+        if (live != null && !string.IsNullOrEmpty(live.GameName))
+        {
+            var mapped = App.Config.Categories.FirstOrDefault(c => c.Id == live.GameId && c.Executables.Count > 0);
+            var exe = mapped?.Executables[0];
+            return (live.GameName, exe?.FullName ?? live.GameName, exe?.EffectiveCustom ?? live.GameName, true,
+                    "your current Twitch category");
+        }
+        return ("Game Name", "Game Executable Name", "Custom Name", false, "");
     }
 
     private static readonly System.Text.RegularExpressions.Regex TokenSplit = new(
@@ -228,14 +245,17 @@ public partial class MappingsPage : UserControl
         App.SetAutoSwitch(AutoToggle.IsChecked == true);
     }
 
+    /// <summary>Pushes the filled-in template to Twitch right away (title only, plus the category if a game is detected).</summary>
     private async void ApplyNow_Click(object sender, RoutedEventArgs e)
     {
-        var hit = App.Switcher.Current;
-        if (hit == null) return;
+        var v = FillValues();
+        if (!v.Real) return;
         App.SaveConfig();
         ApplyNowBtn.IsEnabled = false;
-        await App.Switcher.ApplyAsync(hit.Category.Id, hit.Category.Name, App.Switcher.RenderFor(hit), hit.Exe.EffectiveCustom);
-        ApplyNowBtn.IsEnabled = true;
+        string title = Switcher.Render(TemplateBox.Template, v.Game, v.Full, v.Custom);
+        var hit = App.Switcher.Current;
+        await App.Switcher.ApplyAsync(hit?.Category.Id, hit?.Category.Name, title, v.Custom);
+        UpdatePreview();
     }
 
     private void Add_Click(object sender, RoutedEventArgs e)
