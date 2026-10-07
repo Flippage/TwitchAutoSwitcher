@@ -35,7 +35,7 @@ public static class ImageCache
 
     public static Task<ImageSource?> GetAsync(string url)
     {
-        if (url.Contains("box-art", StringComparison.OrdinalIgnoreCase) || url.Contains("{width}")) url = Normalize(url);
+        if (url.Contains("boxart", StringComparison.OrdinalIgnoreCase) || url.Contains("{width}")) url = Normalize(url);
         if (Memory.TryGetValue(url, out var cached)) return Task.FromResult<ImageSource?>(cached);
         if (InFlight.TryGetValue(url, out var running)) return running;
         var task = LoadAsync(url);

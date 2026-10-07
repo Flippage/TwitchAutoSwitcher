@@ -28,7 +28,7 @@
 
         <Grid>
             <TextBox x:Name="Query" Style="{StaticResource Field}" Padding="38,0,12,0" Tag="Search Twitch categories…"
-                     TextChanged="Query_TextChanged" PreviewKeyDown="Query_PreviewKeyDown"/>
+                     TextChanged="Query_TextChanged" PreviewKeyDown="Query_PreviewKeyDown" GotKeyboardFocus="Query_GotFocus"/>
             <Viewbox Width="18" Height="18" HorizontalAlignment="Left" Margin="14,0,0,0" IsHitTestVisible="False">
                 <Path Style="{StaticResource Icon}" Data="{StaticResource IconSearch}" Stroke="{StaticResource Text2Brush}"/>
             </Viewbox>
@@ -36,8 +36,16 @@
 
         <TextBlock x:Name="Status" Style="{StaticResource Sub}" Margin="4,8,0,0" Visibility="Collapsed"/>
 
-        <ListBox x:Name="Results" Style="{StaticResource ResultList}" Margin="0,8,0,0" MaxHeight="320"
-                 Visibility="Collapsed" ItemTemplate="{StaticResource ResultTemplate}"
-                 PreviewMouseLeftButtonUp="Results_Click" KeyDown="Results_KeyDown"/>
+        <!-- Results float over the window instead of growing the page. -->
+        <Popup x:Name="ResultsPopup" PlacementTarget="{Binding ElementName=Query}" Placement="Bottom" VerticalOffset="6"
+               StaysOpen="True" AllowsTransparency="True" PopupAnimation="Fade" Focusable="False">
+            <Border Width="{Binding ActualWidth, ElementName=Query}" Background="#1A1A1A"
+                    BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="12"
+                    TextElement.FontFamily="{StaticResource UiFont}" TextElement.Foreground="{StaticResource TextBrush}">
+                <ListBox x:Name="Results" Style="{StaticResource ResultList}" Background="Transparent" MaxHeight="360"
+                         ItemTemplate="{StaticResource ResultTemplate}"
+                         PreviewMouseLeftButtonUp="Results_Click" KeyDown="Results_KeyDown"/>
+            </Border>
+        </Popup>
     </StackPanel>
 </UserControl>

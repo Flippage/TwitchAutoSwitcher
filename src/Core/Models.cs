@@ -15,7 +15,7 @@ public sealed class AppConfig
     public bool Toasts { get; set; } = true;
     public bool SuppressToastsFullscreen { get; set; } = true;
     public bool FallbackEnabled { get; set; }
-    public CategoryRef FallbackCategory { get; set; } = new() { Id = "509658", Name = "Just Chatting" };
+    public CategoryRef FallbackCategory { get; set; } = new() { Id = "509658", Name = "Just Chatting", BoxArtUrl = "https://static-cdn.jtvnw.net/ttv-boxart/509658-{width}x{height}.jpg" };
     public bool StartWithWindows { get; set; }
     public bool CloseToTray { get; set; } = true;
     public List<string> RecentTitles { get; set; } = new();

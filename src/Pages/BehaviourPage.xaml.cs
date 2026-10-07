@@ -35,6 +35,22 @@ public partial class BehaviourPage : UserControl
         _loading = false;
         UpdateDelay();
         UpdateVisibility();
+        _ = FillMissingArtAsync();
+    }
+
+    private async System.Threading.Tasks.Task FillMissingArtAsync()
+    {
+        var f = App.Config.FallbackCategory;
+        if (string.IsNullOrEmpty(f.Id) || !string.IsNullOrEmpty(f.BoxArtUrl) || !App.Twitch.IsSignedIn) return;
+        try
+        {
+            var game = await App.Twitch.GetGameAsync(f.Id);
+            if (game == null || string.IsNullOrEmpty(game.BoxArtUrl)) return;
+            f.BoxArtUrl = game.BoxArtUrl;
+            App.SaveConfig();
+            FallbackPicker.SetSelected(f);
+        }
+        catch { }
     }
 
     private void UpdateVisibility()
