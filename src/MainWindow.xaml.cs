@@ -20,9 +20,12 @@ public partial class MainWindow : Window
         Closing += OnClosing;
 
         App.Twitch.AuthChanged += () => Dispatcher.InvokeAsync(UpdateAccountChip);
-        App.Switcher.Changed += () => Dispatcher.InvokeAsync(UpdateLiveBadge);
+        App.Switcher.Changed += () => Dispatcher.InvokeAsync(() => { UpdateLiveBadge(); UpdateNowPlaying(); });
         UpdateAccountChip();
         UpdateLiveBadge();
+        UpdateNowPlaying();
+        // Short windows: drop the box art so the sidebar never overlaps the nav.
+        SizeChanged += (_, _) => NowArtBox.Visibility = ActualHeight < 790 ? Visibility.Collapsed : Visibility.Visible;
 
         NavMappings.IsChecked = true;
         if (!App.Twitch.IsSignedIn) NavAccount.IsChecked = true;
@@ -98,6 +101,62 @@ public partial class MainWindow : Window
         LiveText.Text = live == true ? "Live" : "Offline";
         LiveText.Foreground = brush;
         ViewerText.Text = live == true ? $"{App.Switcher.Viewers:N0} viewers" : "";
+    }
+
+    private bool _syncingSide;
+
+    private void UpdateNowPlaying()
+    {
+        var cfg = App.Config;
+        var hit = App.Switcher.Current;
+
+        _syncingSide = true;
+        SideAutoToggle.IsChecked = cfg.AutoSwitch;
+        SideTitleToggle.IsChecked = cfg.UpdateTitle;
+        _syncingSide = false;
+
+        NowLabel.Text = !cfg.AutoSwitch ? "PAUSED · MANUAL MODE"
+                      : cfg.Mode == DetectionMode.Focus ? "NOW PLAYING · FOCUS" : "NOW PLAYING · LAUNCH";
+        NowLabel.Foreground = (System.Windows.Media.Brush)FindResource(cfg.AutoSwitch ? "SubBrush" : "WarnBrush");
+
+        if (hit != null)
+        {
+            NowGame.Text = hit.Category.Name;
+            NowExe.Text = hit.Exe.FullName;
+            NowExe.Visibility = string.Equals(hit.Exe.FullName, hit.Category.Name, StringComparison.OrdinalIgnoreCase)
+                ? Visibility.Collapsed : Visibility.Visible;
+            Art.SetUrl(NowArt, hit.Category.BoxArtUrl);
+            NowArtIdle.Visibility = Visibility.Collapsed;
+            NowCard.ToolTip = $"{hit.Exe.FullName} ({hit.Exe.FileName}) → {hit.Category.Name}";
+        }
+        else
+        {
+            NowGame.Text = cfg.Categories.Count == 0 ? "No games mapped yet" : "Waiting for a game…";
+            NowExe.Text = cfg.Categories.Count == 0 ? "Add one on Mappings" : "Launch or focus a mapped game";
+            NowExe.Visibility = Visibility.Visible;
+            Art.SetUrl(NowArt, null);
+            NowArt.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1F, 0x1F, 0x1F));
+            NowArtIdle.Visibility = Visibility.Visible;
+            NowCard.ToolTip = null;
+        }
+        NowGame.Foreground = (System.Windows.Media.Brush)FindResource(hit != null ? "TextBrush" : "Text2Brush");
+
+        string? err = App.Switcher.LastError;
+        NowError.Text = err ?? "";
+        NowError.Visibility = string.IsNullOrEmpty(err) ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void SideAuto_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!_syncingSide) App.SetAutoSwitch(SideAutoToggle.IsChecked == true);
+    }
+
+    private void SideTitle_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_syncingSide) return;
+        App.Config.UpdateTitle = SideTitleToggle.IsChecked == true;
+        App.SaveConfig();
+        App.Switcher.RaiseChanged();   // keep the Stream Titles toggle in sync
     }
 
     private void OnClosing(object? sender, CancelEventArgs e)

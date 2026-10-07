@@ -5,7 +5,6 @@
     <Grid Margin="32,26,32,20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -22,29 +21,8 @@
             <TextBlock Text="Game Mappings" Style="{StaticResource H1}" VerticalAlignment="Center"/>
         </DockPanel>
 
-        <!-- Now playing -->
-        <Border Grid.Row="1" Margin="0,16,0,0" Style="{StaticResource Card}" Padding="18,14"
-                BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="2">
-            <DockPanel>
-                <CheckBox x:Name="AutoToggle" DockPanel.Dock="Right" Style="{StaticResource Toggle}" Content="Auto-switch"
-                          Checked="AutoToggle_Changed" Unchecked="AutoToggle_Changed"/>
-                <Button x:Name="TitleLink" DockPanel.Dock="Right" Style="{StaticResource PillButton}" Margin="0,0,16,0"
-                        Click="TitleLink_Click" ToolTip="Stream title settings">
-                    <TextBlock><Run Text="Title: " Foreground="{StaticResource SubBrush}"/><Run x:Name="TitleState" Text="auto"/></TextBlock>
-                </Button>
-                <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="{StaticResource SubBrush}" DockPanel.Dock="Left"
-                         VerticalAlignment="Center" Margin="0,0,16,0"/>
-                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
-                    <TextBlock x:Name="NowLabel" Style="{StaticResource Caps}" Text="NOW PLAYING"/>
-                    <TextBlock x:Name="NowText" FontSize="15" FontWeight="SemiBold" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock x:Name="ErrorText" FontSize="12" Foreground="{StaticResource DangerBrush}" Margin="0,3,0,0"
-                               TextWrapping="Wrap" Visibility="Collapsed"/>
-                </StackPanel>
-            </DockPanel>
-        </Border>
-
         <!-- Mappings list -->
-        <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="1" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="MapList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type local:CategoryRow}">
@@ -85,7 +63,7 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <StackPanel x:Name="EmptyState" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
+        <StackPanel x:Name="EmptyState" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
             <TextBlock Text="No games mapped yet" Style="{StaticResource ItemTitle}" HorizontalAlignment="Center"/>
             <TextBlock Text="Add a Twitch category and the executables that should switch to it." Style="{StaticResource Sub}"
                        HorizontalAlignment="Center" Margin="0,6,0,0"/>

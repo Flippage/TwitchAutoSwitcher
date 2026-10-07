@@ -21,7 +21,13 @@ public partial class TitlesPage : UserControl
         _saveDebounce.Tick += (_, _) => { _saveDebounce.Stop(); App.SaveConfig(); };
         LoadFromConfig();
         TemplateBox.TemplateChanged += OnTemplateChanged;
-        App.Switcher.Changed += () => Dispatcher.InvokeAsync(() => { if (IsVisible) UpdatePreview(); });
+        App.Switcher.Changed += () => Dispatcher.InvokeAsync(() =>
+        {
+            _loading = true;
+            UpdateTitleToggle.IsChecked = App.Config.UpdateTitle;
+            _loading = false;
+            if (IsVisible) UpdatePreview();
+        });
         IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) LoadFromConfig(); };
     }
 
@@ -127,6 +133,7 @@ public partial class TitlesPage : UserControl
         if (_loading) return;
         App.Config.UpdateTitle = UpdateTitleToggle.IsChecked == true;
         App.SaveConfig();
+        App.Switcher.RaiseChanged();   // sidebar toggle follows
     }
 
     /// <summary>Pushes the filled-in template to Twitch right away (title only, plus the category if a game is detected).</summary>

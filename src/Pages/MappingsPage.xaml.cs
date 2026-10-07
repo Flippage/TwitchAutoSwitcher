@@ -31,7 +31,6 @@ public partial class MappingsPage : UserControl
     private static readonly Brush ActiveBg = Freeze(new SolidColorBrush(Color.FromRgb(0x10, 0x2A, 0x30)));
     private static readonly Brush ActiveFg = Freeze(new SolidColorBrush(Color.FromRgb(0xE6, 0xFB, 0xFF)));
 
-    private bool _loading;
     private ExeMapping? _renderedActive;
 
     private static Brush Freeze(SolidColorBrush b) { b.Freeze(); return b; }
@@ -70,59 +69,11 @@ public partial class MappingsPage : UserControl
         EmptyState.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    /// <summary>Only the active-exe highlight lives here now; status is in the sidebar.</summary>
     private void RefreshState()
     {
-        var cfg = App.Config;
-        var hit = App.Switcher.Current;
-
-        _loading = true;
-        AutoToggle.IsChecked = cfg.AutoSwitch;
-        _loading = false;
-
-        string mode = cfg.Mode == DetectionMode.Focus ? "FOCUSED WINDOW" : "LAUNCHED GAME";
-        if (!cfg.AutoSwitch)
-        {
-            NowLabel.Text = "AUTO-SWITCH PAUSED · MANUAL MODE";
-            StatusDot.Fill = (Brush)FindResource("WarnBrush");
-        }
-        else
-        {
-            NowLabel.Text = "NOW PLAYING · " + mode;
-            StatusDot.Fill = (Brush)FindResource(hit != null ? "GoodBrush" : "SubBrush");
-        }
-
-        NowText.Inlines.Clear();
-        if (hit != null)
-        {
-            NowText.Inlines.Add(new System.Windows.Documents.Run(hit.Exe.FullName));
-            NowText.Inlines.Add(new System.Windows.Documents.Run($"  ({hit.Exe.FileName}) → {hit.Category.Name}")
-            { Foreground = (Brush)FindResource("SubBrush"), FontWeight = FontWeights.Normal });
-        }
-        else
-        {
-            NowText.Inlines.Add(new System.Windows.Documents.Run(App.Config.Categories.Count == 0
-                ? "Add a category to get started"
-                : "Waiting for a mapped game…") { Foreground = (Brush)FindResource("Text2Brush"), FontWeight = FontWeights.Normal });
-        }
-
-        string? err = App.Switcher.LastError;
-        ErrorText.Text = err ?? "";
-        ErrorText.Visibility = string.IsNullOrEmpty(err) ? Visibility.Collapsed : Visibility.Visible;
-
-        TitleState.Text = cfg.UpdateTitle ? "auto" : "off";
-        TitleState.Foreground = (Brush)FindResource(cfg.UpdateTitle ? "AccentBrush" : "SubBrush");
-
-        if (!ReferenceEquals(_renderedActive, hit?.Exe)) BuildRows();
+        if (!ReferenceEquals(_renderedActive, App.Switcher.Current?.Exe)) BuildRows();
     }
-
-    private void AutoToggle_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_loading) return;
-        App.SetAutoSwitch(AutoToggle.IsChecked == true);
-    }
-
-    private void TitleLink_Click(object sender, RoutedEventArgs e)
-        => (Window.GetWindow(this) as MainWindow)?.GoToTitles();
 
     private void Add_Click(object sender, RoutedEventArgs e)
         => (Window.GetWindow(this) as MainWindow)?.OpenEditor(null);
