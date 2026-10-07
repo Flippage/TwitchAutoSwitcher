@@ -2,7 +2,12 @@ name: Build AutoSwitcher
 
 on:
   push:
+    branches: ['**']
+    tags: ['v*']
   workflow_dispatch:
+
+permissions:
+  contents: write   # needed to create a Release when a v* tag is pushed
 
 jobs:
   build:
@@ -14,11 +19,18 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Version from tag
+        id: ver
+        shell: pwsh
+        run: |
+          $v = if ("${{ github.ref_type }}" -eq "tag") { "${{ github.ref_name }}".TrimStart('v') } else { "1.0.0" }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
       - name: Publish (small, needs .NET 10 Desktop Runtime)
-        run: dotnet publish src/AutoSwitcher.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=none -o dist
+        run: dotnet publish src/AutoSwitcher.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=none -p:Version=${{ steps.ver.outputs.version }} -o dist
 
       - name: Publish (standalone)
-        run: dotnet publish src/AutoSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -o dist-standalone
+        run: dotnet publish src/AutoSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -p:Version=${{ steps.ver.outputs.version }} -o dist-standalone
 
       - uses: actions/upload-artifact@v7
         with:
@@ -29,3 +41,29 @@ jobs:
         with:
           name: AutoSwitcher-standalone
           path: dist-standalone/AutoSwitcher.exe
+
+      # ---- Release (only for v* tags) ----
+      - name: Package release files
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release | Out-Null
+          $v = "${{ github.ref_name }}"
+          Copy-Item dist-standalone/AutoSwitcher.exe "release/AutoSwitcher-$v.exe"
+          Copy-Item dist/AutoSwitcher.exe "release/AutoSwitcher-$v-small-needs-dotnet10.exe"
+          Compress-Archive -Path dist-standalone/AutoSwitcher.exe -DestinationPath "release/AutoSwitcher-$v.zip"
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v3
+        with:
+          name: AutoSwitcher ${{ github.ref_name }}
+          files: release/*
+          body: |
+            **Download `AutoSwitcher-${{ github.ref_name }}.exe`** (or the `.zip` if your browser or chat app blocks .exe files). It runs on any Windows 10/11 64-bit PC with nothing else to install.
+
+            The `-small-needs-dotnet10` version is tiny, but needs the free [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0).
+
+            **First launch:** the app isn't code-signed, so Windows SmartScreen may say "Windows protected your PC". Click **More info → Run anyway**.
+
+            **Setup:** open AutoSwitcher → Account → **Connect with Twitch**, approve the code, then add your games on Mappings.
