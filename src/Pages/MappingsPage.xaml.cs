@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -42,11 +43,12 @@ public partial class MappingsPage : UserControl
         _saveDebounce.Tick += (_, _) => { _saveDebounce.Stop(); App.SaveConfig(); };
 
         _loading = true;
-        TemplateBox.Text = App.Config.TitleTemplate;
+        TemplateBox.Template = App.Config.TitleTemplate;
         UpdateTitleToggle.IsChecked = App.Config.UpdateTitle;
         _loading = false;
 
         App.Switcher.Changed += () => Dispatcher.InvokeAsync(RefreshState);
+        TemplateBox.TemplateChanged += OnTemplateChanged;
         IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) LoadFromConfig(); };
         Refresh();
     }
@@ -54,7 +56,7 @@ public partial class MappingsPage : UserControl
     private void LoadFromConfig()
     {
         _loading = true;
-        if (TemplateBox.Text != App.Config.TitleTemplate) TemplateBox.Text = App.Config.TitleTemplate;
+        TemplateBox.Template = App.Config.TitleTemplate;
         UpdateTitleToggle.IsChecked = App.Config.UpdateTitle;
         _loading = false;
         RefreshState();
@@ -139,20 +141,70 @@ public partial class MappingsPage : UserControl
             cat = App.Config.Categories.FirstOrDefault(c => c.Executables.Count > 0);
             exe = cat?.Executables[0];
         }
+        string game = cat?.Name ?? "Game Name";
+        string full = exe?.FullName ?? "Game Executable Name";
+        string custom = exe?.EffectiveCustom ?? "Custom Name";
+        string template = TemplateBox.Template;
 
-        string text = cat != null && exe != null
-            ? Switcher.Render(TemplateBox.Text, cat.Name, exe.FullName, exe.EffectiveCustom)
-            : Switcher.Render(TemplateBox.Text, "Game Category", "Full Game Name", "Custom Name");
-        Preview.Text = text;
+        // Live title: plain text with the filled-in values shown as pills.
+        Preview.Inlines.Clear();
+        foreach (string part in TokenSplit.Split(template))
+        {
+            if (part.Length == 0) continue;
+            string? value = part.ToLowerInvariant() switch
+            {
+                "%gamename%" => game,
+                "%fullgamename%" => full,
+                "%customname%" => custom,
+                _ => null,
+            };
+            if (value == null) Preview.Inlines.Add(new Run(part));
+            else Preview.Inlines.Add(new InlineUIContainer(TemplateEditor.MakePill(value, valueStyle: true))
+                 { BaselineAlignment = BaselineAlignment.Center });
+        }
+
+        string text = Switcher.Render(template, game, full, custom);
+        int len = template.Replace("%gameName%", game, StringComparison.OrdinalIgnoreCase)
+                          .Replace("%fullGameName%", full, StringComparison.OrdinalIgnoreCase)
+                          .Replace("%customName%", custom, StringComparison.OrdinalIgnoreCase).Trim().Length;
         Preview.ToolTip = text;
-        Counter.Text = $"{text.Length} / {Switcher.MaxTitle}";
+        Counter.Text = $"{len} / {Switcher.MaxTitle}";
+        Counter.Foreground = (Brush)FindResource(len > Switcher.MaxTitle ? "DangerBrush" : "SubBrush");
         ApplyNowBtn.IsEnabled = hit != null && App.Twitch.IsSignedIn;
+        UpdateRecent();
     }
 
-    private void TemplateBox_TextChanged(object sender, TextChangedEventArgs e)
+    private static readonly System.Text.RegularExpressions.Regex TokenSplit = new(
+        "(%gameName%|%fullGameName%|%customName%)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    public sealed record RecentItem(string Text, string Tip);
+
+    /// <summary>Current Twitch title first, then titles used on the Manual page. Click = use as template.</summary>
+    private void UpdateRecent()
+    {
+        var items = new List<RecentItem>();
+        var seen = new HashSet<string>(StringComparer.Ordinal) { TemplateBox.Template };
+        string? live = App.Switcher.Live?.Title;
+        if (!string.IsNullOrWhiteSpace(live) && seen.Add(live))
+            items.Add(new RecentItem(live, "Your current Twitch title. Click to use it, then add a name pill."));
+        foreach (string t in App.Config.RecentTitles)
+            if (!string.IsNullOrWhiteSpace(t) && seen.Add(t) && items.Count < 6)
+                items.Add(new RecentItem(t, t));
+        RecentTitles.ItemsSource = items;
+        RecentRow.Visibility = items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void Recent_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { CommandParameter: string t }) return;
+        TemplateBox.Template = t;
+        OnTemplateChanged();
+    }
+
+    private void OnTemplateChanged()
     {
         if (_loading) return;
-        App.Config.TitleTemplate = TemplateBox.Text;
+        App.Config.TitleTemplate = TemplateBox.Template;
         _saveDebounce.Stop();
         _saveDebounce.Start();
         UpdatePreview();
@@ -160,11 +212,7 @@ public partial class MappingsPage : UserControl
 
     private void Insert_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button { Tag: string token }) return;
-        int caret = TemplateBox.CaretIndex;
-        TemplateBox.Text = TemplateBox.Text.Insert(caret, token);
-        TemplateBox.Focus();
-        TemplateBox.CaretIndex = caret + token.Length;
+        if (sender is Button { Tag: string token }) TemplateBox.InsertToken(token);
     }
 
     private void UpdateTitle_Changed(object sender, RoutedEventArgs e)
