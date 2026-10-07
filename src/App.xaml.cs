@@ -14,6 +14,7 @@ public partial class App : Application
     public static TwitchService Twitch { get; private set; } = null!;
     public static Switcher Switcher { get; private set; } = null!;
     public static GameWatcher Watcher { get; private set; } = null!;
+    public static Updater Updater { get; private set; } = null!;
     public static bool IsExiting { get; private set; }
 
     private static TrayIcon? _tray;
@@ -44,6 +45,14 @@ public partial class App : Application
 
         Toasts.Init();   // AppUserModelID first, so the taskbar and notifications agree on who we are
         Config = ConfigStore.Load();
+
+        // "Update automatically on next launch": swap in the downloaded version before any UI appears.
+        if (Updater.TryInstallOnLaunch(Config))
+        {
+            RestartInto(Environment.ProcessPath!, string.Join(" ", e.Args.Select(a => $"\"{a}\"")));
+            return;
+        }
+
         Twitch = new TwitchService();
         Switcher = new Switcher(Config, Twitch);
         Watcher = new GameWatcher { FocusDelay = TimeSpan.FromSeconds(Config.FocusDelaySeconds) };
@@ -51,6 +60,7 @@ public partial class App : Application
         Watcher.Activated += Switcher.OnActivated;
         Watcher.Exited += Switcher.OnExited;
 
+        Updater = new Updater(Config);
         _tray = new TrayIcon();
         Switcher.Toast += info => _ = Toasts.ShowAsync(info, fallback: (h, b) => _tray?.ShowToast(h, b));
 
@@ -75,6 +85,7 @@ public partial class App : Application
         catch { /* offline at boot is fine */ }
 
         Watcher.Start(Config.Mode);
+        Updater.Start();
 
         _validateTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromHours(1) };
         _validateTimer.Tick += async (_, _) => await Twitch.ValidateAsync();
@@ -140,6 +151,26 @@ public partial class App : Application
         w.Activate();
         w.Topmost = true;   // nudge to front past focus-stealing rules
         w.Topmost = false;
+    }
+
+    /// <summary>Exit and start <paramref name="exePath"/> (used after installing an update).</summary>
+    public void RestartInto(string exePath, string args)
+    {
+        IsExiting = true;
+        try { if (Config != null) ConfigStore.Save(Config); } catch { }
+        Watcher?.Dispose();
+        _tray?.Dispose();
+        _tray = null;
+        // Free the single-instance lock first, or the new process would just hand off to us and quit.
+        try { _mutex?.ReleaseMutex(); } catch { }
+        _mutex?.Dispose();
+        _mutex = null;
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exePath, args) { UseShellExecute = false });
+        }
+        catch { }
+        Shutdown();
     }
 
     public void ExitApp()

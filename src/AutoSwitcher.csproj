@@ -27,6 +27,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Lets the updater pick the matching release file (standalone vs small) -->
+    <AssemblyMetadata Include="SelfContained" Value="$(SelfContained)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Same icon embedded as a WPF resource for the window title bar and the tray -->
     <Resource Include="Assets\app.ico" />
   </ItemGroup>

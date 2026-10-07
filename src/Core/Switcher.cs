@@ -95,6 +95,14 @@ public sealed class Switcher
         await ApplyAsync(f.Id, f.Name, title, f.Name, "Game closed · fallback category", f.BoxArtUrl);
     }
 
+    /// <summary>"Switch now" from the sidebar: apply the detected game even while auto-switch is off.</summary>
+    public async Task SwitchNowAsync(GameHit hit)
+    {
+        Current = hit;
+        string? title = _cfg.UpdateTitle ? RenderFor(hit) : null;
+        await ApplyAsync(hit.Category.Id, hit.Category.Name, title, hit.Exe.EffectiveCustom, "Switched from AutoSwitcher", hit.Category.BoxArtUrl);
+    }
+
     /// <summary>Re-apply the current game (used when auto-switch is turned back on or the template changes).</summary>
     public void Reapply()
     {
@@ -106,7 +114,7 @@ public sealed class Switcher
     {
         if (!_tw.IsSignedIn)
         {
-            LastError = "Connect your Twitch account in Settings → Account.";
+            LastError = "Connect your Twitch account in Settings.";
             Changed?.Invoke();
             return false;
         }

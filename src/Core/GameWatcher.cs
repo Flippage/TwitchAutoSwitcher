@@ -51,6 +51,27 @@ public sealed class GameWatcher : IDisposable
     public event Action<GameHit>? Activated;
     public event Action<GameHit>? Exited;
 
+    /// <summary>A switch waiting out the focus delay (null when none).</summary>
+    public GameHit? Pending => _pending;
+    public DateTime PendingSinceUtc { get; private set; }
+    public event Action? PendingChanged;
+
+    private void ClearPending()
+    {
+        _pendingTimer.Stop();
+        if (_pending == null) return;
+        _pending = null;
+        PendingChanged?.Invoke();
+    }
+
+    /// <summary>"Switch now" from the sidebar: skip the rest of the focus delay.</summary>
+    public void ActivatePendingNow()
+    {
+        var p = _pending;
+        ClearPending();
+        if (p != null) Activate(p);
+    }
+
     public GameWatcher()
     {
         _hookProc = OnForegroundEvent;
@@ -58,9 +79,8 @@ public sealed class GameWatcher : IDisposable
         _pendingTimer = new DispatcherTimer(DispatcherPriority.Background);
         _pendingTimer.Tick += (_, _) =>
         {
-            _pendingTimer.Stop();
             var p = _pending;
-            _pending = null;
+            ClearPending();
             if (p != null) Activate(p);
         };
         _pollTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(2) };
@@ -134,8 +154,7 @@ public sealed class GameWatcher : IDisposable
         if (_hook != IntPtr.Zero) { Native.UnhookWinEvent(_hook); _hook = IntPtr.Zero; }
         UnhookNameChange();
         _pollTimer.Stop();
-        _pendingTimer.Stop();
-        _pending = null;
+        ClearPending();
     }
 
     // ---------------------------------------------------------------- resolution
@@ -188,8 +207,7 @@ public sealed class GameWatcher : IDisposable
     private void HandleForeground(IntPtr hwnd, bool immediate)
     {
         // Any focus change cancels a pending switch (this is the "clicking back and forth" buffer).
-        _pendingTimer.Stop();
-        _pending = null;
+        ClearPending();
         _foreground = hwnd;
 
         if (hwnd == IntPtr.Zero) { UnhookNameChange(); return; }
@@ -210,7 +228,7 @@ public sealed class GameWatcher : IDisposable
         Native.GetWindowThreadProcessId(hwnd, out uint pid);
         var hit = Resolve(pid, Native.GetTitle(hwnd));
         if (hit == null) return;                                             // e.g. emulator menu: keep current
-        if (IsCurrent(hit)) { _pendingTimer.Stop(); _pending = null; return; }
+        if (IsCurrent(hit)) { ClearPending(); return; }
         // Titles that tick (FPS counters) must not keep restarting the same pending switch.
         if (_pending != null && _pending.Pid == hit.Pid && ReferenceEquals(_pending.Exe, hit.Exe)) return;
         Schedule(hit, immediate: false);
@@ -218,11 +236,13 @@ public sealed class GameWatcher : IDisposable
 
     private void Schedule(GameHit hit, bool immediate)
     {
-        _pendingTimer.Stop();
-        if (immediate || FocusDelay <= TimeSpan.Zero) { _pending = null; Activate(hit); return; }
+        ClearPending();
+        if (immediate || FocusDelay <= TimeSpan.Zero) { Activate(hit); return; }
         _pending = hit;
+        PendingSinceUtc = DateTime.UtcNow;
         _pendingTimer.Interval = FocusDelay;
         _pendingTimer.Start();
+        PendingChanged?.Invoke();
     }
 
     private void HookNameChange(uint pid)

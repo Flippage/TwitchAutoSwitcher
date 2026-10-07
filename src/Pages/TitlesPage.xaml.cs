@@ -72,7 +72,7 @@ public partial class TitlesPage : UserControl
         Counter.Text = $"{len} / {Switcher.MaxTitle}";
         Counter.Foreground = (Brush)FindResource(len > Switcher.MaxTitle ? "DangerBrush" : "SubBrush");
         ApplyNowBtn.IsEnabled = v.Real && App.Twitch.IsSignedIn && template.Trim().Length > 0;
-        ApplyNowBtn.ToolTip = !App.Twitch.IsSignedIn ? "Connect your Twitch account first (Account page)."
+        ApplyNowBtn.ToolTip = !App.Twitch.IsSignedIn ? "Connect your Twitch account first (Settings)."
             : !v.Real ? "Nothing to fill in yet: launch a mapped game, or set a category on Twitch."
             : $"Send this title to Twitch now, filled in for {v.Source}.";
         UpdateRecent();

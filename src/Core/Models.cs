@@ -19,6 +19,10 @@ public sealed class AppConfig
     public bool StartWithWindows { get; set; }
     public bool CloseToTray { get; set; } = true;
     public List<string> RecentTitles { get; set; } = new();
+    public bool AutoDownloadUpdates { get; set; } = true;
+    public bool InstallUpdatesOnLaunch { get; set; }
+    /// <summary>A downloaded, verified update waiting to be installed.</summary>
+    public PendingUpdate? PendingUpdate { get; set; }
     public List<CategoryMapping> Categories { get; set; } = new();
 }
 
@@ -76,6 +80,12 @@ public sealed class ExeMapping : System.ComponentModel.INotifyPropertyChanged
     [JsonIgnore] public string EffectiveCustom => string.IsNullOrWhiteSpace(CustomName) ? FullName : CustomName.Trim();
 
     public ExeMapping Clone() => new() { Path = Path, FullName = FullName, CustomName = CustomName, MatchTitle = MatchTitle, TitlePattern = TitlePattern };
+}
+
+public sealed class PendingUpdate
+{
+    public string Version { get; set; } = "";
+    public string ExePath { get; set; } = "";
 }
 
 public sealed class TokenSet

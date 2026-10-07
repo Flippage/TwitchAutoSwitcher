@@ -52,7 +52,7 @@ public partial class ManualPage : UserControl
         if (!App.Twitch.IsSignedIn)
         {
             LiveGame.Text = "Not connected";
-            LiveTitle.Text = "Connect your Twitch account on the Account page.";
+            LiveTitle.Text = "Connect your Twitch account in Settings.";
             Art.SetUrl(LiveArt, null);
         }
         else if (live == null)

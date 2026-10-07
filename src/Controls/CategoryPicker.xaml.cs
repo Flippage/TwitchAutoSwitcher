@@ -199,7 +199,7 @@ public partial class CategoryPicker : UserControl
         if (!App.Twitch.IsSignedIn)
         {
             CloseResults();
-            ShowStatus("Connect your Twitch account (Account page) to search categories.");
+            ShowStatus("Connect your Twitch account in Settings to search categories.");
             return;
         }
 
