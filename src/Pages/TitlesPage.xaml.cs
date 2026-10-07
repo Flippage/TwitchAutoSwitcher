@@ -123,8 +123,16 @@ public partial class TitlesPage : UserControl
                 CornerRadius = new CornerRadius(6),
                 Padding = new Thickness(6, 1, 6, 2),
                 Margin = new Thickness(0, 0, 8, 0),
+                VerticalAlignment = VerticalAlignment.Center,
                 Background = (Brush)FindResource("AccentDimBrush"),
-                Child = new TextBlock { Text = "CURRENT", FontSize = 9.5, FontWeight = FontWeights.Bold, Foreground = (Brush)FindResource("AccentBrush") },
+                Child = new TextBlock
+                {
+                    Text = "CURRENT", FontSize = 9.5, FontWeight = FontWeights.Bold,
+                    Foreground = (Brush)FindResource("AccentBrush"),
+                    LineHeight = double.NaN,                       // don't inherit the row's 24px line height
+                    LineStackingStrategy = LineStackingStrategy.MaxHeight,
+                    VerticalAlignment = VerticalAlignment.Center,
+                },
             };
             text.Inlines.Add(new InlineUIContainer(badge) { BaselineAlignment = BaselineAlignment.Center });
         }
