@@ -136,6 +136,7 @@ public partial class MappingsPage : UserControl
         var v = FillValues();
         string game = v.Game, full = v.Full, custom = v.Custom;
         string template = TemplateBox.Template;
+        TemplateBox.SetTokenValues(game, full, custom);
 
         // Live title: plain text with the filled-in values shown as pills.
         Preview.Inlines.Clear();
@@ -194,24 +195,61 @@ public partial class MappingsPage : UserControl
     private static readonly System.Text.RegularExpressions.Regex TokenSplit = new(
         "(%gameName%|%fullGameName%|%customName%)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-    public sealed record RecentItem(string Text, string Tip, bool IsCurrent)
-    {
-        public Visibility BadgeVisibility => IsCurrent ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    /// <summary>Current Twitch title first, then titles used on the Manual page. Click = use as template.</summary>
+    /// <summary>Current Twitch title first, then titles set in the app. Full text; click = use as template.</summary>
     private void UpdateRecent()
     {
-        var items = new List<RecentItem>();
+        var rows = new List<Button>();
         var seen = new HashSet<string>(StringComparer.Ordinal) { TemplateBox.Template };
         string? live = App.Switcher.Live?.Title;
         if (!string.IsNullOrWhiteSpace(live) && seen.Add(live))
-            items.Add(new RecentItem(live, "Your current Twitch title. Click to use it, then add a name pill.", true));
+            rows.Add(MakeRecentRow(live, current: true));
         foreach (string t in App.Config.RecentTitles)
-            if (!string.IsNullOrWhiteSpace(t) && seen.Add(t) && items.Count < 8)
-                items.Add(new RecentItem(t, t, false));
-        RecentTitles.ItemsSource = items;
-        RecentRow.Visibility = items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            if (!string.IsNullOrWhiteSpace(t) && seen.Add(t) && rows.Count < 8)
+                rows.Add(MakeRecentRow(t, current: false));
+        RecentTitles.ItemsSource = rows;
+        RecentRow.Visibility = rows.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private Button MakeRecentRow(string template, bool current)
+    {
+        var text = new TextBlock { TextWrapping = TextWrapping.Wrap, LineHeight = 24, FontSize = 13, VerticalAlignment = VerticalAlignment.Center };
+        if (current)
+        {
+            var badge = new Border
+            {
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(6, 1, 6, 2),
+                Margin = new Thickness(0, 0, 8, 0),
+                Background = (Brush)FindResource("AccentDimBrush"),
+                Child = new TextBlock { Text = "CURRENT", FontSize = 9.5, FontWeight = FontWeights.Bold, Foreground = (Brush)FindResource("AccentBrush") },
+            };
+            text.Inlines.Add(new InlineUIContainer(badge) { BaselineAlignment = BaselineAlignment.Center });
+        }
+        foreach (string part in TokenSplit.Split(template))
+        {
+            if (part.Length == 0) continue;
+            if (TokenSplit.IsMatch(part) && TokenSplit.Match(part).Length == part.Length)
+                text.Inlines.Add(new InlineUIContainer(TemplateEditor.MakePill(TemplateEditor.LabelFor(part)))
+                    { BaselineAlignment = BaselineAlignment.Center });
+            else
+                text.Inlines.Add(new Run(part));
+        }
+
+        var button = new Button
+        {
+            Style = (Style)FindResource("PillButton"),
+            Height = double.NaN,
+            MinHeight = 34,
+            Padding = new Thickness(14, 5, 14, 5),
+            Margin = new Thickness(0, 0, 0, 6),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+            CommandParameter = template,
+            ToolTip = current ? "Your current Twitch title. Click to use it, then add a name pill." : "Click to use this title",
+            Content = text,
+        };
+        button.Click += Recent_Click;
+        return button;
     }
 
     private void Recent_Click(object sender, RoutedEventArgs e)

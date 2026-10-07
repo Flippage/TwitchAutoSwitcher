@@ -28,6 +28,20 @@ public partial class TemplateEditor : UserControl
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private bool _updating;
+    private OverflowHighlighter? _highlighter;
+    private readonly Dictionary<string, string> _values = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Twitch's title limit; text past it (after names are filled in) is highlighted red.</summary>
+    public int Limit { get; set; } = Switcher.MaxTitle;
+
+    /// <summary>Tell the editor what each pill will be filled with, so the red highlight starts at the right spot.</summary>
+    public void SetTokenValues(string gameName, string fullGameName, string customName)
+    {
+        _values["%gameName%"] = gameName;
+        _values["%fullGameName%"] = fullGameName;
+        _values["%customName%"] = customName;
+        _highlighter?.Queue();
+    }
 
     /// <summary>Raised (debounce-free) whenever the template text changes.</summary>
     public event Action? TemplateChanged;
@@ -43,6 +57,8 @@ public partial class TemplateEditor : UserControl
         InitializeComponent();
         DataObject.AddPastingHandler(Box, OnPaste);
         DataObject.AddCopyingHandler(Box, OnCopy);
+        Loaded += (_, _) => _highlighter ??= OverflowHighlighter.Attach(Box, Limit,
+            token => _values.TryGetValue(token, out var v) ? v.Length : LabelFor(token).Length);
     }
 
     public static string LabelFor(string token)
@@ -92,6 +108,7 @@ public partial class TemplateEditor : UserControl
             Box.CaretPosition = Box.Document.ContentEnd;
             _updating = false;
             UpdatePlaceholder();
+            _highlighter?.Queue();
         }
     }
 
