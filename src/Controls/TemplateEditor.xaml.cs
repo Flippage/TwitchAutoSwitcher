@@ -96,7 +96,7 @@ public partial class TemplateEditor : UserControl
 
     // ------------------------------------------------------------ text <-> document
 
-    public string Template
+    public new string Template
     {
         get => Serialize();
         set

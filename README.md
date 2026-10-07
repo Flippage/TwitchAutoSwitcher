@@ -26,6 +26,7 @@
 - [Emulators & window-title matching](#emulators--window-title-matching)
 - [Detection modes](#detection-modes)
 - [Notifications](#notifications)
+- [Updates](#updates)
 - [Privacy & data](#privacy--data)
 - [Performance](#performance)
 - [Building from source](#building-from-source)
@@ -43,7 +44,8 @@
 | 🔍 **Category search with box art** | Search Twitch categories directly. Box art is shown everywhere and cached locally. |
 | ✋ **Manual mode** | Set a category and title by hand, which pauses auto-switching until you resume it. |
 | 🕘 **Recent titles** | Your current Twitch title and titles you've used before, one click away. |
-| 📡 **Live status** | A Live / Offline indicator and a persistent **Now Playing** panel with box art. |
+| 📡 **Live status** | A Live / Offline indicator and a persistent **On Stream** panel showing what's on Twitch, with box art. |
+| ⬆️ **Auto-updates** | Checks GitHub for new versions, downloads in the background while you're offline, and installs in one click. |
 | 🔔 **Silent toast notifications** | Native Windows notifications with box art when your category or title changes. They never chime on stream. |
 | 🔐 **One-click Twitch login** | Secure device-code sign-in that stays connected. There's no client secret and no password stored. |
 | 🪶 **Lightweight** | Event-driven detection, tray mode and tiny network usage, so it won't affect game performance. |
@@ -68,7 +70,7 @@
 
 ## Getting started
 
-1. **Connect Twitch:** open **Account** and click **Connect with Twitch**. Approve the short code at `twitch.tv/activate`. That's it, and you stay signed in.
+1. **Connect Twitch:** open **Settings** and click **Connect with Twitch**. Approve the short code at `twitch.tv/activate`. That's it, and you stay signed in.
 2. **Add your games:** on **Mappings**, click **Add category**:
    - Search for the Twitch category (box art included).
    - Add one or more executables with **Browse for .exe…** or **Pick running**.
@@ -76,7 +78,7 @@
 3. **Choose how to detect:** on **Behaviour**, pick **A game launches** or **A game window is focused**.
 4. **Set your title (optional):** on **Stream Titles**, write a template and insert name pills.
 
-The **Now Playing** panel in the sidebar shows what's detected, what's set on Twitch, and whether auto-switch and auto title are on.
+The **On Stream** panel in the sidebar always shows the category currently set on Twitch. When a mapped game is detected that isn't on stream, it appears underneath: **Switching in Ns** (with a timer bar) during the focus delay, or **Mapped game detected** while auto-switch is off. **Switch now** applies it immediately.
 
 ---
 
@@ -139,6 +141,27 @@ Toasts are **silent**, and a new switch replaces the previous toast. You can tur
 
 ---
 
+## Updates
+
+AutoSwitcher keeps itself up to date from this repository's [Releases](../../releases):
+
+- It checks for a new version shortly after starting and every 6 hours.
+- When one is found, a notification appears in the bottom-right of the app, and **Settings** shows an amber **Update** tag.
+- **Update now** downloads the matching version (standalone or small), installs it and relaunches. It takes a few seconds.
+- Every download is checked against GitHub's SHA-256 checksum. If it doesn't match, it's discarded and nothing changes.
+- Your mappings, titles and Twitch login are stored in AppData, so updates never touch them.
+
+Options in **Settings → Updates**:
+
+| Option | What it does |
+|---|---|
+| **Automatically download new versions in the background** | Downloads updates for you, but only while you're **offline**, so it never competes with your stream. |
+| **Update automatically on next launch** | Installs a downloaded update the next time AutoSwitcher starts, including **Start with Windows**. Requires the option above. |
+
+AutoSwitcher never installs an update or restarts itself without one of these: you click **Update now**, or you've turned on install on next launch.
+
+---
+
 ## Privacy & data
 
 - **Twitch permission:** only `channel:manage:broadcast`, which lets the app change your title and category.
@@ -148,7 +171,8 @@ Toasts are **silent**, and a new switch replaces the previous toast. You can tur
   - `%APPDATA%\AutoSwitcher\config.json`: mappings, titles, settings
   - `%APPDATA%\AutoSwitcher\tokens.dat`: encrypted tokens
   - `%LOCALAPPDATA%\AutoSwitcher\art\`: cached box art
-- Nothing is sent anywhere except the Twitch API.
+  - `%LOCALAPPDATA%\AutoSwitcher\updates\`: downloaded updates (removed after installing)
+- Nothing is sent anywhere except the Twitch API, plus GitHub when checking for and downloading updates.
 
 ---
 
@@ -185,10 +209,10 @@ build.cmd full     :: standalone → dist-standalone\AutoSwitcher.exe
 src/
 ├─ Core/            Twitch API + auth, game detection, switching rules, config, toasts, native interop
 ├─ Controls/        Category picker, title template editor, over-limit highlighter, recent titles
-├─ Pages/           Mappings, Edit category, Stream Titles, Manual, Account, Behaviour
+├─ Pages/           Mappings, Edit category, Stream Titles, Manual, Behaviour, Settings
 ├─ Assets/          App icon
 ├─ Theme.xaml       Colours, typography and control styles
-└─ MainWindow.xaml  Sidebar, Now Playing panel, page host
+└─ MainWindow.xaml  Sidebar, On Stream panel, update toast, page host
 ```
 </details>
 
