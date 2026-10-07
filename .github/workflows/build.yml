@@ -42,6 +42,21 @@ jobs:
       - name: Publish (standalone)
         run: dotnet publish src/AutoSwitcher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -p:Version=${{ steps.ver.outputs.version }} -o dist-standalone
 
+      # Launch both builds for real and make sure they start, show the window and open every page.
+      - name: Smoke test (starts and shows UI)
+        shell: pwsh
+        run: |
+          foreach ($exe in @("dist/AutoSwitcher.exe", "dist-standalone/AutoSwitcher.exe")) {
+            $p = Start-Process -FilePath $exe -ArgumentList "--selftest" -PassThru
+            if (-not $p.WaitForExit(90000)) { $p.Kill(); throw "$exe --selftest timed out" }
+            if ($p.ExitCode -ne 0) {
+              $log = Join-Path $env:APPDATA "AutoSwitcher/error.log"
+              if (Test-Path $log) { Get-Content $log }
+              throw "$exe --selftest failed with exit code $($p.ExitCode)"
+            }
+            Write-Host "$exe OK"
+          }
+
       - uses: actions/upload-artifact@v7
         with:
           name: AutoSwitcher

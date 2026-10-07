@@ -38,16 +38,40 @@ public partial class App : Application
         }
 
         base.OnStartup(e);
+        _selfTest = e.Args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
         DispatcherUnhandledException += (_, args) =>
         {
-            args.Handled = true;   // never crash the tray app over a UI glitch
+            args.Handled = true;   // never crash the tray app over a UI glitch…
+            LogError("UI", args.Exception);
+            if (_selfTest) { _selfTestError ??= args.Exception; }
         };
 
+        try
+        {
+            StartApp(e);
+        }
+        catch (Exception ex)
+        {
+            // …but never sit invisible either: say what happened and exit cleanly.
+            LogError("Startup", ex);
+            if (_selfTest) { Console.Error.WriteLine(ex); SelfTestExit(1); return; }
+            MessageBox.Show(
+                "AutoSwitcher couldn't start.\n\n" + ex.GetBaseException().Message +
+                "\n\nDetails were saved to:\n" + ErrorLogPath +
+                "\n\nPlease report this on GitHub (Issues).",
+                "AutoSwitcher", MessageBoxButton.OK, MessageBoxImage.Error);
+            try { _mutex?.ReleaseMutex(); } catch { }
+            Shutdown(1);
+        }
+    }
+
+    private void StartApp(StartupEventArgs e)
+    {
         Toasts.Init();   // AppUserModelID first, so the taskbar and notifications agree on who we are
         Config = ConfigStore.Load();
 
         // "Update automatically on next launch": swap in the downloaded version before any UI appears.
-        if (Updater.TryInstallOnLaunch(Config))
+        if (!_selfTest && Updater.TryInstallOnLaunch(Config))
         {
             RestartInto(Environment.ProcessPath!, string.Join(" ", e.Args.Select(a => $"\"{a}\"")));
             return;
@@ -66,12 +90,60 @@ public partial class App : Application
 
         var window = new MainWindow();
         MainWindow = window;
-        if (!e.Args.Contains("--minimized", StringComparer.OrdinalIgnoreCase)) window.Show();
+        if (_selfTest || !e.Args.Contains("--minimized", StringComparer.OrdinalIgnoreCase)) window.Show();
 
-        ThreadPool.RegisterWaitForSingleObject(_showSignal,
+        ThreadPool.RegisterWaitForSingleObject(_showSignal!,
             (_, _) => Dispatcher.InvokeAsync(ShowMain), null, Timeout.Infinite, executeOnlyOnce: false);
 
+        if (_selfTest) { _ = RunSelfTestAsync(window); return; }
         _ = InitAsync();
+    }
+
+    // ------------------------------------------------------------------ diagnostics
+
+    private static bool _selfTest;
+    private static Exception? _selfTestError;
+    public static string ErrorLogPath => System.IO.Path.Combine(ConfigStore.Dir, "error.log");
+
+    public static void LogError(string where, Exception ex)
+    {
+        try
+        {
+            System.IO.Directory.CreateDirectory(ConfigStore.Dir);
+            System.IO.File.AppendAllText(ErrorLogPath,
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] v{System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version} {where}: {ex}\n\n");
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// CI smoke test (--selftest): start for real, show the window, open every page, render, exit 0.
+    /// Any exception → exit 1. Catches "starts but shows nothing" bugs before a release goes out.
+    /// </summary>
+    private async Task RunSelfTestAsync(MainWindow window)
+    {
+        try
+        {
+            Watcher.Start(Config.Mode);
+            await Task.Delay(500);
+            window.SelfTestVisitPages();
+            await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+            if (!window.IsVisible) throw new InvalidOperationException("Main window is not visible.");
+            _ = Updater.CurrentTag;
+            await Task.Delay(500);
+        }
+        catch (Exception ex) { _selfTestError ??= ex; }
+
+        if (_selfTestError != null) { Console.Error.WriteLine(_selfTestError); SelfTestExit(1); }
+        else { Console.WriteLine("SELFTEST OK " + Updater.CurrentTag); SelfTestExit(0); }
+    }
+
+    private void SelfTestExit(int code)
+    {
+        IsExiting = true;
+        _tray?.Dispose();
+        _tray = null;
+        Shutdown(code);
     }
 
     private async Task InitAsync()

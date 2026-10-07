@@ -375,6 +375,24 @@ public partial class MainWindow : Window
         _ = App.Updater.UpdateNowAsync();
     }
 
+    /// <summary>Used by --selftest: open every page and the transient UI so their construction/layout runs.</summary>
+    public void SelfTestVisitPages()
+    {
+        foreach (var nav in new[] { NavTitles, NavManual, NavBehaviour, NavSettings, NavMappings })
+        {
+            nav.IsChecked = true;
+            UpdateLayout();
+        }
+        OpenEditor(null);
+        UpdateLayout();
+        CloseEditor();
+        QueueUpdateToast(true);
+        UpdateLayout();
+        HideToast();
+        UpdateNowPlaying();
+        UpdateLayout();
+    }
+
     // ------------------------------------------------------------------ window
 
     private void OnClosing(object? sender, CancelEventArgs e)

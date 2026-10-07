@@ -27,7 +27,14 @@ public enum UpdateState { Idle, Checking, UpToDate, Available, Downloading, Read
 public sealed class Updater
 {
     public const string Repo = "Flippage/TwitchAutoSwitcher";
-    private static readonly HttpClient Http = CreateClient();
+
+    // NOTE: static initializers run top to bottom. CurrentVersion must come before anything that uses it
+    // (the HttpClient's User-Agent) — v1.1.0 crashed on start because of exactly this ordering.
+    public static Version CurrentVersion { get; } = Normalize(Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(1, 0, 0));
+    public static string CurrentTag => $"v{CurrentVersion.ToString(3)}";
+
+    private static readonly Lazy<HttpClient> HttpLazy = new(CreateClient);
+    private static HttpClient Http => HttpLazy.Value;
     private static readonly string UpdatesDir =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AutoSwitcher", "updates");
 
@@ -37,9 +44,6 @@ public sealed class Updater
     private string? _assetUrl, _assetName, _assetDigest;
     private long _assetSize;
     private string? _notified;
-
-    public static Version CurrentVersion { get; } = Normalize(Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(1, 0, 0));
-    public static string CurrentTag => $"v{CurrentVersion.ToString(3)}";
 
     public UpdateState State { get; private set; } = UpdateState.Idle;
     public string? LatestTag { get; private set; }
