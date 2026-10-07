@@ -1,6 +1,7 @@
 <UserControl x:Class="AutoSwitcher.TemplateEditor"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
     <Border x:Name="Frame" CornerRadius="10" Background="{StaticResource FieldDeepBrush}"
             BorderBrush="{StaticResource LineBrush}" BorderThickness="1" MinHeight="44">
         <Grid>
@@ -18,4 +19,7 @@
             </RichTextBox>
         </Grid>
     </Border>
+    <Border x:Name="Ring" CornerRadius="10" BorderThickness="2" BorderBrush="{StaticResource AccentBrush}"
+            IsHitTestVisible="False" Visibility="Collapsed"/>
+    </Grid>
 </UserControl>

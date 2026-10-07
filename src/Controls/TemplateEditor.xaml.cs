@@ -213,7 +213,7 @@ public partial class TemplateEditor : UserControl
 
     private void Box_FocusChanged(object sender, KeyboardFocusChangedEventArgs e)
     {
-        Frame.BorderBrush = (Brush)FindResource(Box.IsKeyboardFocusWithin ? "AccentBrush" : "LineBrush");
+        Ring.Visibility = Box.IsKeyboardFocusWithin ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void UpdatePlaceholder() =>
