@@ -101,16 +101,51 @@ public partial class TitlesPage : UserControl
     /// <summary>Current Twitch title first, then titles set in the app. Full text; click = use as template.</summary>
     private void UpdateRecent()
     {
-        var rows = new List<Button>();
+        var rows = new List<UIElement>();
         var seen = new HashSet<string>(StringComparer.Ordinal) { TemplateBox.Template };
         string? live = App.Switcher.Live?.Title;
         if (!string.IsNullOrWhiteSpace(live) && seen.Add(live))
-            rows.Add(MakeRecentRow(live, current: true));
+            rows.Add(WithDelete(MakeRecentRow(live, current: true), null));      // live title: nothing to delete
         foreach (string t in App.Config.RecentTitles)
             if (!string.IsNullOrWhiteSpace(t) && seen.Add(t) && rows.Count < 8)
-                rows.Add(MakeRecentRow(t, current: false));
+                rows.Add(WithDelete(MakeRecentRow(t, current: false), t));
         RecentTitles.ItemsSource = rows;
         RecentRow.Visibility = rows.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>Row = the title button (left) + a delete button pinned to the right edge.</summary>
+    private UIElement WithDelete(Button row, string? deletable)
+    {
+        var grid = new Grid { Margin = new Thickness(0, 0, 0, 6) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        row.Margin = new Thickness(0);
+        grid.Children.Add(row);
+
+        var del = new Button
+        {
+            Style = (Style)FindResource("IconButton"),
+            Tag = FindResource("IconTrash"),
+            Width = 36,
+            Height = 36,
+            Margin = new Thickness(8, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            CommandParameter = deletable,
+            ToolTip = "Remove from recent titles",
+            Visibility = deletable == null ? Visibility.Hidden : Visibility.Visible,   // keeps rows aligned
+        };
+        del.Click += DeleteRecent_Click;
+        Grid.SetColumn(del, 1);
+        grid.Children.Add(del);
+        return grid;
+    }
+
+    private void DeleteRecent_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { CommandParameter: string t }) return;
+        App.Config.RecentTitles.Remove(t);
+        App.SaveConfig();
+        UpdateRecent();
     }
 
     private Button MakeRecentRow(string template, bool current)
