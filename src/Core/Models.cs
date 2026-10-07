@@ -38,8 +38,12 @@ public sealed class CategoryMapping
     public List<ExeMapping> Executables { get; set; } = new();
 }
 
-public sealed class ExeMapping
+public sealed class ExeMapping : System.ComponentModel.INotifyPropertyChanged
 {
+    private bool _matchTitle;
+    private string _titlePattern = "";
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
     /// <summary>Full path to the executable.</summary>
     public string Path { get; set; } = "";
     /// <summary>%fullGameName% — read from the exe's version info, editable.</summary>
@@ -47,11 +51,31 @@ public sealed class ExeMapping
     /// <summary>%customName% — optional short name; falls back to FullName.</summary>
     public string CustomName { get; set; } = "";
 
+    /// <summary>Only match when the window title contains <see cref="TitlePattern"/> (emulators: one exe, many games).</summary>
+    public bool MatchTitle
+    {
+        get => _matchTitle;
+        set { _matchTitle = value; PropertyChanged?.Invoke(this, new(nameof(MatchTitle))); }
+    }
+
+    /// <summary>Case-insensitive "contains" text; * matches any run of characters (e.g. "Donkey Kong 64*USA").</summary>
+    public string TitlePattern
+    {
+        get => _titlePattern;
+        set { _titlePattern = value ?? ""; PropertyChanged?.Invoke(this, new(nameof(TitlePattern))); }
+    }
+
+    /// <summary>True when this mapping actually filters on the window title.</summary>
+    [JsonIgnore] public bool UsesTitle => MatchTitle && !string.IsNullOrWhiteSpace(TitlePattern);
+
+    /// <summary>Two mappings conflict only if they're the same exe AND the same title rule.</summary>
+    [JsonIgnore] public string Key => Path.ToLowerInvariant() + "|" + (UsesTitle ? TitlePattern.Trim().ToLowerInvariant() : "");
+
     [JsonIgnore] public string FileName => System.IO.Path.GetFileName(Path);
     [JsonIgnore] public string ProcessName => System.IO.Path.GetFileNameWithoutExtension(Path);
     [JsonIgnore] public string EffectiveCustom => string.IsNullOrWhiteSpace(CustomName) ? FullName : CustomName.Trim();
 
-    public ExeMapping Clone() => new() { Path = Path, FullName = FullName, CustomName = CustomName };
+    public ExeMapping Clone() => new() { Path = Path, FullName = FullName, CustomName = CustomName, MatchTitle = MatchTitle, TitlePattern = TitlePattern };
 }
 
 public sealed class TokenSet

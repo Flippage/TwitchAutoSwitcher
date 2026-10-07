@@ -12,6 +12,8 @@ internal static class Native
         int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 
     public const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
+    public const uint EVENT_OBJECT_NAMECHANGE = 0x800C;
+    public const int OBJID_WINDOW = 0;
     public const uint WINEVENT_OUTOFCONTEXT = 0x0000;
     public const uint WINEVENT_SKIPOWNPROCESS = 0x0002;
 
@@ -54,6 +56,22 @@ internal static class Native
         var sb = new StringBuilder(len + 1);
         GetWindowText(hWnd, sb, sb.Capacity);
         return sb.ToString();
+    }
+
+    /// <summary>Title of a process's main (visible, unowned, titled) top-level window, or null.</summary>
+    public static string? FindMainWindowTitle(uint pid)
+    {
+        string? found = null;
+        EnumWindows((hwnd, _) =>
+        {
+            GetWindowThreadProcessId(hwnd, out uint p);
+            if (p != pid || !IsWindowVisible(hwnd) || GetWindow(hwnd, GW_OWNER) != IntPtr.Zero) return true;
+            string t = GetTitle(hwnd);
+            if (t.Length == 0) return true;
+            found = t;
+            return false;   // stop
+        }, IntPtr.Zero);
+        return found;
     }
 
     // ---------- Processes ----------

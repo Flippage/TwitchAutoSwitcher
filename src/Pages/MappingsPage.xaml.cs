@@ -59,7 +59,7 @@ public partial class MappingsPage : UserControl
             Chips = c.Executables.Select(e => new ExeChip
             {
                 Name = string.IsNullOrWhiteSpace(e.FullName) ? e.ProcessName : e.FullName,
-                File = e.FileName,
+                File = e.UsesTitle ? $"{e.FileName}  · title: “{e.TitlePattern}”" : e.FileName,
                 Path = e.Path,
                 Background = ReferenceEquals(e, active) ? ActiveBg : ChipBg,
                 Foreground = ReferenceEquals(e, active) ? ActiveFg : ChipFg,

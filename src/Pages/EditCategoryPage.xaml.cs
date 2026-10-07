@@ -47,7 +47,8 @@ public partial class EditCategoryPage : UserControl
 
     private void AddExe(string path)
     {
-        if (_exes.Any(e => string.Equals(e.Path, path, StringComparison.OrdinalIgnoreCase))) return;
+        // Same exe twice is fine only if one of them uses a title rule (set it after adding).
+        if (_exes.Any(e => string.Equals(e.Path, path, StringComparison.OrdinalIgnoreCase) && !e.UsesTitle)) return;
         _exes.Add(new ExeMapping { Path = path, FullName = ReadFullName(path) });
         ErrorText.Text = "";
     }
@@ -80,6 +81,19 @@ public partial class EditCategoryPage : UserControl
         }
     }
 
+    private void GrabTitle_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { CommandParameter: ExeMapping exe }) return;
+        string? title = GameWatcher.FindTitleForExe(exe.Path);
+        if (title == null)
+        {
+            ErrorText.Text = $"{exe.FileName} isn't running. Start the game in it, then click Use current title again.";
+            return;
+        }
+        exe.TitlePattern = title;
+        ErrorText.Text = "";
+    }
+
     private void RemoveExe_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button { CommandParameter: ExeMapping exe }) _exes.Remove(exe);
@@ -98,13 +112,26 @@ public partial class EditCategoryPage : UserControl
         {
             x.FullName = string.IsNullOrWhiteSpace(x.FullName) ? x.ProcessName : x.FullName.Trim();
             x.CustomName = (x.CustomName ?? "").Trim();
+            x.TitlePattern = x.TitlePattern.Trim();
+            if (x.MatchTitle && x.TitlePattern.Length == 0)
+            {
+                ErrorText.Text = $"Enter the window title to match for {x.FileName}, or turn Match window title off.";
+                return;
+            }
+        }
+        if (_exes.GroupBy(x => x.Key).Any(g => g.Count() > 1))
+        {
+            ErrorText.Text = "The same executable is listed twice with the same title rule.";
+            return;
         }
 
         var categories = App.Config.Categories;
 
-        // Each executable belongs to exactly one category: take these paths away from any other mapping.
+        // Each exe + title rule belongs to exactly one category: take matching entries away from other mappings.
+        // (An emulator can still appear in several categories with different title rules.)
+        var keys = _exes.Select(n => n.Key).ToHashSet();
         foreach (var other in categories.Where(c => !ReferenceEquals(c, _existing)))
-            other.Executables.RemoveAll(o => _exes.Any(n => string.Equals(n.Path, o.Path, StringComparison.OrdinalIgnoreCase)));
+            other.Executables.RemoveAll(o => keys.Contains(o.Key));
 
         // Adding a category that's already mapped merges into it.
         var target = _existing ?? categories.FirstOrDefault(c => c.Id == cat.Id);
@@ -130,7 +157,7 @@ public partial class EditCategoryPage : UserControl
         target.Name = cat.Name;
         target.BoxArtUrl = cat.BoxArtUrl;
         if (_existing == null && target.Executables.Count > 0)
-            target.Executables.AddRange(_exes.Where(n => !target.Executables.Any(o => string.Equals(o.Path, n.Path, StringComparison.OrdinalIgnoreCase))));
+            target.Executables.AddRange(_exes.Where(n => !target.Executables.Any(o => o.Key == n.Key)));
         else
             target.Executables = _exes.ToList();
 

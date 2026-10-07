@@ -2,6 +2,9 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:AutoSwitcher">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
     <Grid Margin="32,26,32,20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -130,6 +133,25 @@
                                                     </StackPanel>
                                                 </Grid>
                                                 <TextBlock Text="{Binding Path}" Style="{StaticResource Mono}" Margin="0,6,0,0" ToolTip="{Binding Path}"/>
+
+                                                <!-- Emulators: same exe, different games → match by window title -->
+                                                <CheckBox Style="{StaticResource Toggle}" HorizontalAlignment="Left" Margin="0,10,0,0"
+                                                          IsChecked="{Binding MatchTitle, UpdateSourceTrigger=PropertyChanged}"
+                                                          ToolTip="For emulators and launchers: only use this mapping when the window title matches">
+                                                    <TextBlock Text="Match window title" FontSize="12.5" Foreground="{StaticResource Text2Brush}"/>
+                                                </CheckBox>
+                                                <StackPanel Margin="0,8,0,0" Visibility="{Binding MatchTitle, Converter={StaticResource BoolToVis}}">
+                                                    <DockPanel>
+                                                        <Button DockPanel.Dock="Right" Style="{StaticResource PillButton}" Content="Use current title"
+                                                                CommandParameter="{Binding}" Click="GrabTitle_Click" Margin="10,0,0,0"
+                                                                ToolTip="Copy the title of this exe's window (it must be running)"/>
+                                                        <TextBox Style="{StaticResource FlatField}" FontWeight="Normal"
+                                                                 Text="{Binding TitlePattern, UpdateSourceTrigger=PropertyChanged}"
+                                                                 Tag="Title contains… e.g. Donkey Kong 64 USA"/>
+                                                    </DockPanel>
+                                                    <TextBlock Style="{StaticResource Sub}" FontSize="11.5" Margin="0,6,0,0"
+                                                               Text="Matches when the window title contains this text (any case). Delete parts that change, or use * for them, e.g. Donkey Kong 64*USA."/>
+                                                </StackPanel>
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>
