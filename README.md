@@ -62,7 +62,7 @@
 | `AutoSwitcher-vX.Y.Z-small-needs-dotnet10.exe` | ~26 MB | Requires the [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0). |
 
 > **"Windows protected your PC"?** The app isn't code-signed yet, so SmartScreen may warn on first launch.
-> Click **More info → Run anyway**. Some chat apps also block unsigned `.exe` files, so share the `.zip` or the release link instead.
+> Click **More info → Run anyway**. Some chat apps (e.g. Discord) also block unsigned `.exe` files, so share the `.zip` or the release link instead.
 
 ---
 
@@ -85,7 +85,7 @@ The **Now Playing** panel in the sidebar shows what's detected, what's set on Tw
 Build a title template once and AutoSwitcher fills it in on every switch:
 
 ```
-AUS 18+ | Multiworld Day 2 | Now playing: [Custom Name] | !socials
+AUS 18+ | Multiworld Day 2 | Now playing: [Custom Name] | !discord
 ```
 
 | Pill | Example | Source |
