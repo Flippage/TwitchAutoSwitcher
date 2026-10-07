@@ -194,7 +194,10 @@ public partial class MappingsPage : UserControl
     private static readonly System.Text.RegularExpressions.Regex TokenSplit = new(
         "(%gameName%|%fullGameName%|%customName%)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-    public sealed record RecentItem(string Text, string Tip);
+    public sealed record RecentItem(string Text, string Tip, bool IsCurrent)
+    {
+        public Visibility BadgeVisibility => IsCurrent ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     /// <summary>Current Twitch title first, then titles used on the Manual page. Click = use as template.</summary>
     private void UpdateRecent()
@@ -203,10 +206,10 @@ public partial class MappingsPage : UserControl
         var seen = new HashSet<string>(StringComparer.Ordinal) { TemplateBox.Template };
         string? live = App.Switcher.Live?.Title;
         if (!string.IsNullOrWhiteSpace(live) && seen.Add(live))
-            items.Add(new RecentItem(live, "Your current Twitch title. Click to use it, then add a name pill."));
+            items.Add(new RecentItem(live, "Your current Twitch title. Click to use it, then add a name pill.", true));
         foreach (string t in App.Config.RecentTitles)
-            if (!string.IsNullOrWhiteSpace(t) && seen.Add(t) && items.Count < 6)
-                items.Add(new RecentItem(t, t));
+            if (!string.IsNullOrWhiteSpace(t) && seen.Add(t) && items.Count < 8)
+                items.Add(new RecentItem(t, t, false));
         RecentTitles.ItemsSource = items;
         RecentRow.Visibility = items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -254,7 +257,8 @@ public partial class MappingsPage : UserControl
         ApplyNowBtn.IsEnabled = false;
         string title = Switcher.Render(TemplateBox.Template, v.Game, v.Full, v.Custom);
         var hit = App.Switcher.Current;
-        await App.Switcher.ApplyAsync(hit?.Category.Id, hit?.Category.Name, title, v.Custom);
+        if (await App.Switcher.ApplyAsync(hit?.Category.Id, hit?.Category.Name, title, v.Custom))
+            App.RememberTitle(TemplateBox.Template);
         UpdatePreview();
     }
 

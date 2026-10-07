@@ -21,6 +21,13 @@
     <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
     <TieredPGO>true</TieredPGO>
     <NoWarn>$(NoWarn);SYSLIB1054;CA1416</NoWarn>
+    <!-- Icon for the EXE itself (Explorer, taskbar pin, Alt+Tab) -->
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Same icon embedded as a WPF resource for the window title bar and the tray -->
+    <Resource Include="Assets\app.ico" />
+  </ItemGroup>
 
 </Project>

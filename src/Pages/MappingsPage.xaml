@@ -58,39 +58,53 @@
                     </StackPanel>
                     <TextBlock Text="STREAM TITLE TEMPLATE" Style="{StaticResource Caps}" VerticalAlignment="Center"/>
                 </DockPanel>
-                <local:TemplateEditor x:Name="TemplateBox" Margin="0,10,0,10"
+                <local:TemplateEditor x:Name="TemplateBox" Margin="0,10,0,0"
                                       PlaceholderText="e.g. Currently Playing: [Custom Name] | !multiworld"/>
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Left" Text="Live title" Style="{StaticResource Sub}" Margin="0,3,14,0" VerticalAlignment="Top"/>
-                    <TextBlock x:Name="Preview" FontSize="13" TextWrapping="Wrap" LineHeight="26" VerticalAlignment="Center"/>
-                </DockPanel>
-                <DockPanel Margin="0,12,0,0">
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
-                        <TextBlock x:Name="Counter" Style="{StaticResource Sub}" VerticalAlignment="Center"/>
+
+                <!-- Directly under the editor: switch behaviour on the left, length + apply on the right -->
+                <DockPanel Margin="0,10,0,0">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <TextBlock x:Name="Counter" Style="{StaticResource Sub}" VerticalAlignment="Center"
+                                   ToolTip="Length after names are filled in. Twitch allows 140."/>
                         <Button x:Name="ApplyNowBtn" Style="{StaticResource PillButton}" Content="Apply now"
                                 Click="ApplyNow_Click" Margin="12,0,0,0"/>
-                        <CheckBox x:Name="UpdateTitleToggle" Style="{StaticResource Toggle}" Content="Update title on switch"
-                                  Checked="UpdateTitle_Changed" Unchecked="UpdateTitle_Changed" Margin="16,0,0,0"/>
                     </StackPanel>
-                    <DockPanel x:Name="RecentRow" Margin="0,0,16,0">
-                        <TextBlock DockPanel.Dock="Left" Text="Recent" Style="{StaticResource Sub}" VerticalAlignment="Top" Margin="0,7,14,0"/>
-                        <ItemsControl x:Name="RecentTitles">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Button Style="{StaticResource PillButton}" CommandParameter="{Binding Text}" Click="Recent_Click"
-                                            Margin="0,0,6,6" MaxWidth="300" ToolTip="{Binding Tip}">
-                                        <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis"/>
-                                    </Button>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </DockPanel>
+                    <CheckBox x:Name="UpdateTitleToggle" Style="{StaticResource Toggle}" HorizontalAlignment="Left"
+                              Checked="UpdateTitle_Changed" Unchecked="UpdateTitle_Changed">
+                        <TextBlock Text="Update title on switch" Foreground="{StaticResource Text2Brush}" FontSize="13.5"/>
+                    </CheckBox>
                 </DockPanel>
+
+                <TextBlock Text="LIVE TITLE PREVIEW" Style="{StaticResource Caps}" Margin="0,18,0,8"/>
+                <Border CornerRadius="10" Padding="16,9" MinHeight="44" BorderThickness="1"
+                        BorderBrush="#232323" Background="#121212">
+                    <TextBlock x:Name="Preview" FontSize="14" TextWrapping="Wrap" LineHeight="26" VerticalAlignment="Center"/>
+                </Border>
+
+                <StackPanel x:Name="RecentRow">
+                    <TextBlock Text="RECENT TITLES" Style="{StaticResource Caps}" Margin="0,18,0,8"/>
+                    <ItemsControl x:Name="RecentTitles">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource PillButton}" CommandParameter="{Binding Text}" Click="Recent_Click"
+                                        Margin="0,0,6,6" MaxWidth="360" ToolTip="{Binding Tip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border CornerRadius="6" Padding="6,0,6,1" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                Background="{StaticResource AccentDimBrush}" Visibility="{Binding BadgeVisibility}">
+                                            <TextBlock Text="CURRENT" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
             </StackPanel>
         </Border>
 

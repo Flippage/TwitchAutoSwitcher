@@ -91,6 +91,18 @@ public partial class App : Application
         try { ConfigStore.Save(Config); } catch { }
     }
 
+    /// <summary>Titles set from the app (Manual page, Apply now). Kept as templates so name pills survive.</summary>
+    public static void RememberTitle(string title)
+    {
+        title = title.Trim();
+        if (title.Length == 0) return;
+        var list = Config.RecentTitles;
+        list.Remove(title);
+        list.Insert(0, title);
+        if (list.Count > 8) list.RemoveRange(8, list.Count - 8);
+        SaveConfig();
+    }
+
     public static void SetAutoSwitch(bool on)
     {
         if (Config.AutoSwitch == on) return;

@@ -16,7 +16,7 @@ public sealed class TrayIcon : IDisposable
 
     public TrayIcon()
     {
-        _iconImage = MakeIcon();
+        _iconImage = LoadAppIcon() ?? MakeIcon();
         _icon = new NotifyIcon { Icon = _iconImage, Text = "AutoSwitcher", Visible = true };
 
         var menu = new ContextMenuStrip { ShowImageMargin = false, ShowCheckMargin = true };
@@ -52,6 +52,18 @@ public sealed class TrayIcon : IDisposable
 
     [DllImport("user32.dll")]
     private static extern bool DestroyIcon(IntPtr handle);
+
+    private static Icon? LoadAppIcon()
+    {
+        try
+        {
+            var info = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/Assets/app.ico"));
+            if (info == null) return null;
+            using var stream = info.Stream;
+            return new Icon(stream, SystemInformation.SmallIconSize);
+        }
+        catch { return null; }
+    }
 
     private static Icon MakeIcon()
     {

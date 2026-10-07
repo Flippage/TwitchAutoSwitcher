@@ -171,7 +171,7 @@ public partial class ManualPage : UserControl
         bool ok = await App.Switcher.ApplyAsync(gameId, gameName, rendered, gameName);
         if (ok)
         {
-            if (title != null) RememberTitle(title);              // keep the template, variables included
+            if (title != null) App.RememberTitle(title);              // keep the template, variables included
             _artForGameId = null;
             SetStatus("Updated.", error: false);
             UpdateView();
@@ -179,14 +179,6 @@ public partial class ManualPage : UserControl
         else SetStatus(App.Switcher.LastError ?? "Update failed.", error: true);
     }
 
-    private static void RememberTitle(string title)
-    {
-        var list = App.Config.RecentTitles;
-        list.Remove(title);
-        list.Insert(0, title);
-        if (list.Count > 5) list.RemoveRange(5, list.Count - 5);
-        App.SaveConfig();
-    }
 
     private void SetStatus(string text, bool error)
     {
