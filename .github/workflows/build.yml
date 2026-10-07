@@ -19,6 +19,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # tags + history, for release notes fallback
 
       - uses: actions/setup-dotnet@v6
         with:
@@ -78,6 +80,24 @@ jobs:
           Copy-Item dist/AutoSwitcher.exe "release/AutoSwitcher-$v-small-needs-dotnet10.exe"
           Compress-Archive -Path dist-standalone/AutoSwitcher.exe -DestinationPath "release/AutoSwitcher-$v.zip"
 
+      - name: Release notes from CHANGELOG.md
+        if: steps.ver.outputs.release == 'true'
+        shell: pwsh
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          $text = if (Test-Path CHANGELOG.md) { Get-Content CHANGELOG.md -Raw } else { "" }
+          $m = [regex]::Match($text, "(?ms)^##\s*\[?v?$([regex]::Escape($v))\]?[^\r\n]*\r?\n(.*?)(?=^##\s|\z)")
+          if ($m.Success -and $m.Groups[1].Value.Trim()) {
+            $notes = $m.Groups[1].Value.Trim()
+          } else {
+            # No changelog entry: list commit messages since the previous release.
+            $prev = git describe --tags --abbrev=0 2>$null
+            $range = if ($prev) { "$prev..HEAD" } else { "HEAD" }
+            $notes = "### Changes`n" + ((git log --no-merges --pretty="- %s" $range | Where-Object { $_ -notmatch '^- (TEMP|Merge)' }) -join "`n")
+          }
+          $notes += "`n`n---`n**Download:** ``AutoSwitcher-v$v.zip`` (recommended), the ``.exe``, or the small ``-small-needs-dotnet10.exe``. Already running v1.1.1 or later? AutoSwitcher will offer this update by itself. New here? See the [README](https://github.com/${{ github.repository }}#download--install)."
+          Set-Content -Path release-notes.md -Value $notes -Encoding utf8
+
       - name: Create GitHub Release
         if: steps.ver.outputs.release == 'true'
         uses: softprops/action-gh-release@v3
@@ -86,11 +106,4 @@ jobs:
           tag_name: ${{ steps.ver.outputs.tag }}
           target_commitish: ${{ github.sha }}
           files: release/*
-          body: |
-            **Download `AutoSwitcher-${{ steps.ver.outputs.tag }}.exe`** (or the `.zip` if your browser or chat app blocks .exe files). It runs on any Windows 10/11 64-bit PC with nothing else to install.
-
-            The `-small-needs-dotnet10` version is tiny, but needs the free [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0).
-
-            **First launch:** the app isn't code-signed, so Windows SmartScreen may say "Windows protected your PC". Click **More info → Run anyway**.
-
-            **Setup:** open AutoSwitcher → Account → **Connect with Twitch**, approve the code, then add your games on Mappings.
+          body_path: release-notes.md
