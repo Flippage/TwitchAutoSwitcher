@@ -76,8 +76,24 @@ public partial class CategoryPicker : UserControl
 
     private void Window_PreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
-        // Clicks inside the popup arrive on the popup's own window, so anything here is outside it.
-        if (ResultsPopup.IsOpen && !Query.IsMouseOver) CloseResults();
+        if (!ResultsPopup.IsOpen || Query.IsMouseOver) return;
+        // Mouse events inside the popup also route up to the window (through the Popup's logical parent),
+        // so a click on a result arrives here too. Only close for genuinely outside clicks.
+        if (IsInsidePopup(e.OriginalSource as DependencyObject)) return;
+        CloseResults();
+    }
+
+    private bool IsInsidePopup(DependencyObject? d)
+    {
+        if (ResultsPopup.Child is UIElement child && child.IsMouseOver) return true;
+        while (d != null)
+        {
+            if (d == ResultsPopup.Child || d == Results) return true;
+            d = d is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D
+                ? System.Windows.Media.VisualTreeHelper.GetParent(d) ?? LogicalTreeHelper.GetParent(d)
+                : LogicalTreeHelper.GetParent(d);
+        }
+        return false;
     }
 
     private void OpenResults()
