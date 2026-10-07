@@ -19,6 +19,9 @@ public sealed class Switcher
     private readonly SemaphoreSlim _lock = new(1, 1);
 
     public ChannelInfo? Live { get; private set; }
+    /// <summary>True = streaming now, false = offline, null = unknown / not connected.</summary>
+    public bool? IsLive { get; private set; }
+    public int Viewers { get; private set; }
     public GameHit? Current { get; private set; }
     public string? LastError { get; private set; }
     public DateTime? LastSwitchUtc { get; private set; }
@@ -47,6 +50,19 @@ public sealed class Switcher
         Render(_cfg.TitleTemplate, hit.Category.Name, hit.Exe.FullName, hit.Exe.EffectiveCustom);
 
     public void RaiseChanged() => Changed?.Invoke();
+
+    public async Task RefreshStreamStatusAsync()
+    {
+        if (!_tw.IsSignedIn) { IsLive = null; Changed?.Invoke(); return; }
+        try
+        {
+            var s = await _tw.GetStreamStatusAsync();
+            IsLive = s?.Live;
+            Viewers = s?.Viewers ?? 0;
+        }
+        catch { /* keep last known */ }
+        Changed?.Invoke();
+    }
 
     public async Task RefreshLiveAsync()
     {

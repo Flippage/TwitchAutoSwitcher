@@ -37,7 +37,7 @@
                         <DockPanel Margin="0,0,0,8">
                             <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Tag="{StaticResource IconRefresh}"
                                     Width="28" Height="28" ToolTip="Refresh from Twitch" Click="Refresh_Click"/>
-                            <TextBlock Text="CURRENTLY LIVE ON TWITCH" Style="{StaticResource Caps}" VerticalAlignment="Center"/>
+                            <TextBlock Text="CURRENT TITLE" Style="{StaticResource Caps}" VerticalAlignment="Center"/>
                         </DockPanel>
                         <Border Style="{StaticResource Card}" Padding="14">
                             <DockPanel>
@@ -52,7 +52,7 @@
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="NEW CATEGORY (OPTIONAL)" Style="{StaticResource Caps}" Margin="0,7,0,15"/>
-                        <local:CategoryPicker x:Name="Picker" ResultsMaxHeight="240"/>
+                        <local:CategoryPicker x:Name="Picker" ResultsMaxHeight="320"/>
                     </StackPanel>
                 </Grid>
 
@@ -60,8 +60,24 @@
                     <TextBlock x:Name="Counter" DockPanel.Dock="Right" Style="{StaticResource Sub}"/>
                     <TextBlock Text="STREAM TITLE" Style="{StaticResource Caps}"/>
                 </DockPanel>
-                <TextBox x:Name="TitleBox" Style="{StaticResource TextArea}" MaxLength="140" Tag="Stream title"
+                <TextBox x:Name="TitleBox" Style="{StaticResource TextArea}" MaxLength="300" Tag="Stream title"
                          TextChanged="TitleBox_TextChanged"/>
+                <WrapPanel Margin="0,10,0,0">
+                    <TextBlock Text="Insert:" Style="{StaticResource Sub}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <Button x:Name="VarGame" Style="{StaticResource ChipButton}" Content="%gameName%" Tag="%gameName%"
+                            Click="Insert_Click" Margin="0,0,6,0"/>
+                    <Button x:Name="VarFull" Style="{StaticResource ChipButton}" Content="%fullGameName%" Tag="%fullGameName%"
+                            Click="Insert_Click" Margin="0,0,6,0"/>
+                    <Button x:Name="VarCustom" Style="{StaticResource ChipButton}" Content="%customName%" Tag="%customName%"
+                            Click="Insert_Click"/>
+                </WrapPanel>
+                <Border Margin="0,10,0,0" Padding="14,10" CornerRadius="10" Background="{StaticResource FieldDeepBrush}"
+                        BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock x:Name="PreviewLabel" Style="{StaticResource Caps}" FontSize="10.5"/>
+                        <TextBlock x:Name="Preview" FontSize="13.5" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
                 <WrapPanel x:Name="RecentPanel" Margin="0,10,0,0">
                     <TextBlock Text="Recent:" Style="{StaticResource Sub}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <ItemsControl x:Name="RecentList">

@@ -14,6 +14,7 @@ public partial class ManualPage : UserControl
     {
         InitializeComponent();
         App.Switcher.Changed += () => Dispatcher.InvokeAsync(UpdateView);
+        Picker.SelectionChanged += _ => UpdateCounter();
         IsVisibleChanged += async (_, e) =>
         {
             if (!(bool)e.NewValue) return;
@@ -87,7 +88,58 @@ public partial class ManualPage : UserControl
         catch { }
     }
 
-    private void UpdateCounter() => Counter.Text = $"{TitleBox.Text.Length} / {Switcher.MaxTitle}";
+    /// <summary>
+    /// Values for the title variables in manual mode:
+    /// %gameName% = the category you picked here, else the detected game's category, else what's on Twitch now.
+    /// %fullGameName% / %customName% = the detected exe's names when it belongs to that category, else the category name.
+    /// </summary>
+    private (string Game, string Full, string Custom, string Source) Vars()
+    {
+        var hit = App.Switcher.Current;
+        var picked = Picker.Selected;
+        string game = picked?.Name ?? hit?.Category.Name ?? App.Switcher.Live?.GameName ?? "";
+        bool exeMatches = hit != null && (picked == null || picked.Id == hit.Category.Id);
+        if (exeMatches)
+            return (game, hit!.Exe.FullName, hit.Exe.EffectiveCustom, hit.Exe.FullName);
+        return (game, game, game, picked != null ? "selected category" : "current Twitch category");
+    }
+
+    private string Rendered()
+    {
+        var v = Vars();
+        return Switcher.Render(TitleBox.Text, v.Game, v.Full, v.Custom);
+    }
+
+    private void UpdateCounter()
+    {
+        var v = Vars();
+        string text = Switcher.Render(TitleBox.Text, v.Game, v.Full, v.Custom);   // clipped to 140
+        int len = TitleBox.Text                                                         // unclipped length
+            .Replace("%gameName%", v.Game, System.StringComparison.OrdinalIgnoreCase)
+            .Replace("%fullGameName%", v.Full, System.StringComparison.OrdinalIgnoreCase)
+            .Replace("%customName%", v.Custom, System.StringComparison.OrdinalIgnoreCase)
+            .Trim().Length;
+        Counter.Text = $"{len} / {Switcher.MaxTitle}";
+        Counter.Foreground = (Brush)FindResource(len > Switcher.MaxTitle ? "DangerBrush" : "SubBrush");
+
+        PreviewLabel.Text = len > Switcher.MaxTitle
+            ? "PREVIEW · WILL BE CUT TO 140 CHARACTERS"
+            : "PREVIEW · USING " + v.Source.ToUpperInvariant();
+        Preview.Text = text.Length == 0 ? "—" : text;
+
+        VarGame.ToolTip = string.IsNullOrEmpty(v.Game) ? "Twitch category" : v.Game;
+        VarFull.ToolTip = string.IsNullOrEmpty(v.Full) ? "Executable's full name" : v.Full;
+        VarCustom.ToolTip = string.IsNullOrEmpty(v.Custom) ? "Your custom name (falls back to full name)" : v.Custom;
+    }
+
+    private void Insert_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string token }) return;
+        int caret = TitleBox.CaretIndex;
+        TitleBox.Text = TitleBox.Text.Insert(caret, token);
+        TitleBox.Focus();
+        TitleBox.CaretIndex = caret + token.Length;
+    }
 
     private void TitleBox_TextChanged(object sender, TextChangedEventArgs e) => UpdateCounter();
 
@@ -123,10 +175,11 @@ public partial class ManualPage : UserControl
     {
         App.SetAutoSwitch(false);
         SetStatus("Updating Twitch…", error: false);
-        bool ok = await App.Switcher.ApplyAsync(gameId, gameName, title, gameName);
+        string? rendered = title != null ? Rendered() : null;   // fill %variables% before sending
+        bool ok = await App.Switcher.ApplyAsync(gameId, gameName, rendered, gameName);
         if (ok)
         {
-            if (title != null) RememberTitle(title);
+            if (title != null) RememberTitle(title);              // keep the template, variables included
             _artForGameId = null;
             SetStatus("Updated.", error: false);
             UpdateView();

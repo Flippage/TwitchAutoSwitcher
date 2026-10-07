@@ -19,7 +19,9 @@ public partial class MainWindow : Window
         Closing += OnClosing;
 
         App.Twitch.AuthChanged += () => Dispatcher.InvokeAsync(UpdateAccountChip);
+        App.Switcher.Changed += () => Dispatcher.InvokeAsync(UpdateLiveBadge);
         UpdateAccountChip();
+        UpdateLiveBadge();
 
         NavMappings.IsChecked = true;
         if (!App.Twitch.IsSignedIn) NavAccount.IsChecked = true;
@@ -71,6 +73,28 @@ public partial class MainWindow : Window
             AvatarLetter.Text = "";
             Art.SetUrl(Avatar, t.ProfileImageUrl);
         }
+    }
+
+    private static System.Windows.Media.Brush Frozen(byte r, byte g, byte b)
+    {
+        var br = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(r, g, b));
+        br.Freeze();
+        return br;
+    }
+    private static readonly System.Windows.Media.Brush OnAirBrush = Frozen(0x4A, 0xDE, 0x80);
+    private static readonly System.Windows.Media.Brush OffAirBrush = Frozen(0xEF, 0x44, 0x44);
+
+    private void UpdateLiveBadge()
+    {
+        bool? live = App.Switcher.IsLive;
+        if (live == null) { LiveBadge.Visibility = Visibility.Collapsed; return; }
+        LiveBadge.Visibility = Visibility.Visible;
+        var brush = live == true ? OnAirBrush : OffAirBrush;
+        LiveDot.Fill = brush;
+        LiveGlow.Fill = brush;
+        LiveText.Text = live == true ? "Live" : "Offline";
+        LiveText.Foreground = brush;
+        ViewerText.Text = live == true ? $"{App.Switcher.Viewers:N0} viewers" : "";
     }
 
     private void OnClosing(object? sender, CancelEventArgs e)

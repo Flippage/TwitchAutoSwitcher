@@ -40,6 +40,18 @@
                     </DockPanel>
                 </Border>
 
+                <Border x:Name="LiveBadge" DockPanel.Dock="Bottom" Margin="16,0,16,8" Padding="12,9" CornerRadius="10"
+                        Background="#141414" Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <Grid Width="10" Height="10" VerticalAlignment="Center">
+                            <Ellipse x:Name="LiveGlow" Width="18" Height="18" Margin="-4" Opacity="0.25"/>
+                            <Ellipse x:Name="LiveDot"/>
+                        </Grid>
+                        <TextBlock x:Name="LiveText" Margin="10,0,0,0" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ViewerText" Margin="8,0,0,0" FontSize="12" Foreground="{StaticResource SubBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
                 <StackPanel>
                     <RadioButton x:Name="NavMappings" Style="{StaticResource NavButton}" Content="Mappings" Tag="{StaticResource IconHome}" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavManual" Style="{StaticResource NavButton}" Content="Manual" Tag="{StaticResource IconPencil}" Checked="Nav_Checked"/>

@@ -257,6 +257,18 @@ public sealed class TwitchService
         };
     }
 
+    /// <summary>Live status from GET /streams (empty data = offline). Null if unknown.</summary>
+    public async Task<(bool Live, int Viewers)?> GetStreamStatusAsync()
+    {
+        if (Tokens == null || string.IsNullOrEmpty(Tokens.UserId)) return null;
+        using var resp = await ApiAsync(HttpMethod.Get, "streams?user_id=" + Tokens.UserId);
+        if (resp == null || !resp.IsSuccessStatusCode) return null;
+        using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+        var data = doc.RootElement.GetProperty("data");
+        if (data.GetArrayLength() == 0) return (false, 0);
+        return (true, data[0].TryGetProperty("viewer_count", out var v) ? v.GetInt32() : 0);
+    }
+
     /// <summary>PATCH /channels with only the fields that changed. Returns true on 204.</summary>
     public async Task<bool> UpdateChannelAsync(string? gameId, string? title)
     {

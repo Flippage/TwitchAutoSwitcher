@@ -20,6 +20,7 @@ public partial class App : Application
     private Mutex? _mutex;
     private EventWaitHandle? _showSignal;
     private DispatcherTimer? _validateTimer;
+    private DispatcherTimer? _statusTimer;
 
     public static new App Current => (App)Application.Current;
 
@@ -68,6 +69,7 @@ public partial class App : Application
         {
             await Twitch.InitAsync();
             await Switcher.RefreshLiveAsync();
+            await Switcher.RefreshStreamStatusAsync();
         }
         catch { /* offline at boot is fine */ }
 
@@ -76,6 +78,12 @@ public partial class App : Application
         _validateTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromHours(1) };
         _validateTimer.Tick += async (_, _) => await Twitch.ValidateAsync();
         _validateTimer.Start();
+
+        // One tiny GET /streams per minute for the Live / Offline light.
+        _statusTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(60) };
+        _statusTimer.Tick += async (_, _) => await Switcher.RefreshStreamStatusAsync();
+        _statusTimer.Start();
+        Twitch.AuthChanged += () => Dispatcher.InvokeAsync(async () => await Switcher.RefreshStreamStatusAsync());
     }
 
     public static void SaveConfig()
