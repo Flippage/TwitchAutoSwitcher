@@ -72,9 +72,7 @@ public partial class ManualPage : UserControl
             }
         }
 
-        RecentList.ItemsSource = null;
-        RecentList.ItemsSource = App.Config.RecentTitles;
-        RecentPanel.Visibility = App.Config.RecentTitles.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        UpdateRecent();
         UpdateCounter();
         UpdateGamePills();
     }
@@ -95,7 +93,9 @@ public partial class ManualPage : UserControl
     /// Older saved titles may still contain %variables%; fill them from the picked/detected game so
     /// Twitch never receives them literally.
     /// </summary>
-    private string Rendered()
+    private string Rendered() => Render(TitleBox.Text);
+
+    private string Render(string template)
     {
         var hit = App.Switcher.Current;
         var picked = Picker.Selected;
@@ -103,7 +103,7 @@ public partial class ManualPage : UserControl
         bool exeMatches = hit != null && (picked == null || picked.Id == hit.Category.Id);
         string full = exeMatches ? hit!.Exe.FullName : game;
         string custom = exeMatches ? hit!.Exe.EffectiveCustom : game;
-        return Switcher.Render(TitleBox.Text, game, full, custom);
+        return Switcher.Render(template, game, full, custom);
     }
 
     private void UpdateCounter()
@@ -117,15 +117,19 @@ public partial class ManualPage : UserControl
 
     private void UpdateGamePills()
     {
-        var names = App.Config.Categories.Select(c => c.Name).Where(n => !string.IsNullOrWhiteSpace(n))
-            .Distinct(System.StringComparer.OrdinalIgnoreCase).ToList();
-        GamePills.ItemsSource = names;
-        GamePanel.Visibility = names.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        var cats = App.Config.Categories.Where(c => !string.IsNullOrWhiteSpace(c.Name))
+            .GroupBy(c => c.Id).Select(g => g.First()).ToList();
+        GamePills.ItemsSource = cats;
+        GamePanel.Visibility = cats.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    /// <summary>Inserts the game's name at the cursor and selects it as the new category.</summary>
     private void InsertGame_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button { CommandParameter: string name }) return;
+        if (sender is not Button { CommandParameter: CategoryMapping cat }) return;
+        Picker.SetSelected(new CategoryRef { Id = cat.Id, Name = cat.Name, BoxArtUrl = cat.BoxArtUrl });
+
+        string name = cat.Name;
         int caret = TitleBox.SelectionStart;
         string text = TitleBox.Text.Remove(caret, TitleBox.SelectionLength);   // typing over a selection replaces it
         TitleBox.Text = text.Insert(caret, name);
@@ -135,9 +139,14 @@ public partial class ManualPage : UserControl
 
     private void TitleBox_TextChanged(object sender, TextChangedEventArgs e) => UpdateCounter();
 
-    private void Recent_Click(object sender, RoutedEventArgs e)
+    /// <summary>Same list as Stream Titles. Saved titles with name pills are filled in when picked.</summary>
+    private void UpdateRecent()
     {
-        if (sender is Button { CommandParameter: string t }) TitleBox.Text = t;
+        var rows = RecentTitleRows.Build(this, TitleBox.Text,
+            pick: t => { TitleBox.Text = Render(t); TitleBox.Focus(); TitleBox.CaretIndex = TitleBox.Text.Length; },
+            delete: t => { App.Config.RecentTitles.Remove(t); App.SaveConfig(); UpdateRecent(); });
+        RecentList.ItemsSource = rows;
+        RecentPanel.Visibility = rows.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs e)

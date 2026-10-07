@@ -98,111 +98,14 @@ public partial class TitlesPage : UserControl
     private static readonly System.Text.RegularExpressions.Regex TokenSplit = new(
         "(%gameName%|%fullGameName%|%customName%)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-    /// <summary>Current Twitch title first, then titles set in the app. Full text; click = use as template.</summary>
+    /// <summary>Current Twitch title first, then titles set in the app. Click = use as template.</summary>
     private void UpdateRecent()
     {
-        var rows = new List<UIElement>();
-        var seen = new HashSet<string>(StringComparer.Ordinal) { TemplateBox.Template };
-        string? live = App.Switcher.Live?.Title;
-        if (!string.IsNullOrWhiteSpace(live) && seen.Add(live))
-            rows.Add(WithDelete(MakeRecentRow(live, current: true), null));      // live title: nothing to delete
-        foreach (string t in App.Config.RecentTitles)
-            if (!string.IsNullOrWhiteSpace(t) && seen.Add(t) && rows.Count < 8)
-                rows.Add(WithDelete(MakeRecentRow(t, current: false), t));
+        var rows = RecentTitleRows.Build(this, TemplateBox.Template,
+            pick: t => { TemplateBox.Template = t; OnTemplateChanged(); },
+            delete: t => { App.Config.RecentTitles.Remove(t); App.SaveConfig(); UpdateRecent(); });
         RecentTitles.ItemsSource = rows;
         RecentRow.Visibility = rows.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    /// <summary>Row = the title button (left) + a delete button pinned to the right edge.</summary>
-    private UIElement WithDelete(Button row, string? deletable)
-    {
-        var grid = new Grid { Margin = new Thickness(0, 0, 0, 6) };
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        row.Margin = new Thickness(0);
-        grid.Children.Add(row);
-
-        var del = new Button
-        {
-            Style = (Style)FindResource("IconButton"),
-            Tag = FindResource("IconTrash"),
-            Width = 36,
-            Height = 36,
-            Margin = new Thickness(8, 0, 0, 0),
-            VerticalAlignment = VerticalAlignment.Center,
-            CommandParameter = deletable,
-            ToolTip = "Remove from recent titles",
-            Visibility = deletable == null ? Visibility.Hidden : Visibility.Visible,   // keeps rows aligned
-        };
-        del.Click += DeleteRecent_Click;
-        Grid.SetColumn(del, 1);
-        grid.Children.Add(del);
-        return grid;
-    }
-
-    private void DeleteRecent_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { CommandParameter: string t }) return;
-        App.Config.RecentTitles.Remove(t);
-        App.SaveConfig();
-        UpdateRecent();
-    }
-
-    private Button MakeRecentRow(string template, bool current)
-    {
-        var text = new TextBlock { TextWrapping = TextWrapping.Wrap, LineHeight = 24, FontSize = 13, VerticalAlignment = VerticalAlignment.Center };
-        if (current)
-        {
-            var badge = new Border
-            {
-                CornerRadius = new CornerRadius(6),
-                Padding = new Thickness(6, 1, 6, 2),
-                Margin = new Thickness(0, 0, 8, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-                Background = (Brush)FindResource("AccentDimBrush"),
-                Child = new TextBlock
-                {
-                    Text = "CURRENT", FontSize = 9.5, FontWeight = FontWeights.Bold,
-                    Foreground = (Brush)FindResource("AccentBrush"),
-                    LineHeight = double.NaN,                       // don't inherit the row's 24px line height
-                    LineStackingStrategy = LineStackingStrategy.MaxHeight,
-                    VerticalAlignment = VerticalAlignment.Center,
-                },
-            };
-            text.Inlines.Add(new InlineUIContainer(badge) { BaselineAlignment = BaselineAlignment.Center });
-        }
-        foreach (string part in TokenSplit.Split(template))
-        {
-            if (part.Length == 0) continue;
-            if (TokenSplit.IsMatch(part) && TokenSplit.Match(part).Length == part.Length)
-                text.Inlines.Add(new InlineUIContainer(TemplateEditor.MakePill(TemplateEditor.LabelFor(part)))
-                    { BaselineAlignment = BaselineAlignment.Center });
-            else
-                text.Inlines.Add(new Run(part));
-        }
-
-        var button = new Button
-        {
-            Style = (Style)FindResource("PillButton"),
-            Height = double.NaN,
-            MinHeight = 34,
-            Padding = new Thickness(14, 5, 14, 5),
-            Margin = new Thickness(0, 0, 0, 6),
-            HorizontalAlignment = HorizontalAlignment.Left,
-            HorizontalContentAlignment = HorizontalAlignment.Left,
-            CommandParameter = template,
-            ToolTip = current ? "Your current Twitch title. Click to use it, then add a name pill." : "Click to use this title",
-            Content = text,
-        };
-        button.Click += Recent_Click;
-        return button;
-    }
-
-    private void Recent_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { CommandParameter: string t }) return;
-        TemplateBox.Template = t;
-        OnTemplateChanged();
     }
 
     private void OnTemplateChanged()
