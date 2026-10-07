@@ -134,12 +134,21 @@
             </Border>
 
             <!-- Advanced -->
-            <TextBlock Text="STORAGE" Style="{StaticResource Caps}" Margin="0,26,0,8"/>
+            <TextBlock Text="STORAGE &amp; DIAGNOSTICS" Style="{StaticResource Caps}" Margin="0,26,0,8"/>
             <Border Style="{StaticResource Card}" Padding="20,16">
                 <StackPanel>
                     <TextBlock Style="{StaticResource Sub}">
                         <Run Text="Settings are stored in "/><Run x:Name="ConfigPathRun" FontFamily="{StaticResource MonoFont}"/><Run Text=". Tokens are encrypted for your Windows user (DPAPI)."/>
                     </TextBlock>
+                    <DockPanel Margin="0,14,0,0">
+                        <Button DockPanel.Dock="Right" Style="{StaticResource OutlineButton}" Content="Open log folder" Height="40"
+                                Click="OpenLogs_Click" VerticalAlignment="Center" Margin="16,0,0,0"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Detection log" Style="{StaticResource ItemTitle}"/>
+                            <TextBlock Style="{StaticResource Sub}" Margin="0,2,0,0"
+                                       Text="Records game detection, switches and errors, to help track down problems. Other apps are logged by file name only, never window titles. Capped at about 2 MB."/>
+                        </StackPanel>
+                    </DockPanel>
                 </StackPanel>
             </Border>
         </StackPanel>

@@ -43,6 +43,7 @@ public partial class App : Application
         {
             args.Handled = true;   // never crash the tray app over a UI glitch…
             LogError("UI", args.Exception);
+            Log.Error("ui", "Unhandled UI error", args.Exception);
             if (_selfTest) { _selfTestError ??= args.Exception; }
         };
 
@@ -124,9 +125,18 @@ public partial class App : Application
     {
         try
         {
-            Watcher.Start(Config.Mode);
-            await Task.Delay(500);
+            // Map two processes that always exist on the build machine so the detection stack is exercised.
+            Config.Categories.Add(new CategoryMapping { Id = "1", Name = "Self-test Game One",
+                Executables = { new ExeMapping { Path = @"C:\Windows\explorer.exe", FullName = "Explorer" } } });
+            Config.Categories.Add(new CategoryMapping { Id = "2", Name = "Self-test Game Two With A Rather Long Category Name",
+                Executables = { new ExeMapping { Path = @"C:\x\pwsh.exe", FullName = "PowerShell" } } });
+            Watcher.UpdateMappings(Config.Categories);
+            Watcher.Start(DetectionMode.Launch);
+            await Task.Delay(800);
             window.SelfTestVisitPages();
+            await window.SelfTestFlipStackAsync();
+            Watcher.Start(DetectionMode.Focus);
+            await Task.Delay(1500);                     // let the 1 s focus check run at least once
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
             if (!window.IsVisible) throw new InvalidOperationException("Main window is not visible.");
             _ = Updater.CurrentTag;

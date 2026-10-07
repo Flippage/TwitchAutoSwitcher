@@ -8,6 +8,20 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.2] - 2026-10-08
+
+### Added
+- When several mapped games are running, flip between them in the sidebar with the ‹ › arrows and switch to any of them with **Switch now**.
+- A detection log, so switching problems can be traced. Open it from **Settings → Storage & diagnostics → Open log folder**.
+- Custom names now show on the executables in **Mappings**.
+
+### Changed
+- Long category names shrink to fit instead of being cut off, in both the On Stream panel and the detected-game card.
+
+### Fixed
+- In focus mode, a detected game could disappear and its switch be cancelled even though the game window stayed focused (for example when a browser or helper window briefly took focus). Focus is now checked against the actual foreground window before cancelling.
+- "Switch now" no longer wraps onto two lines.
+
 ## [1.1.1] - 2026-10-08
 
 ### Fixed

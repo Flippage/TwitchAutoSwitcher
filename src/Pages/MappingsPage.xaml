@@ -49,7 +49,7 @@
                                                         ToolTip="{Binding Path}">
                                                     <!-- One TextBlock with two runs so name and file share a baseline -->
                                                     <TextBlock FontSize="11.5">
-                                                        <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding Foreground, Mode=OneWay}"/><Run Text="    " FontSize="8"/><Run Text="{Binding File, Mode=OneWay}" FontFamily="{StaticResource MonoFont}" FontSize="11" Foreground="#7A7A7A"/>
+                                                        <Run Text="{Binding CustomPrefix, Mode=OneWay}" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/><Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" Foreground="{Binding Foreground, Mode=OneWay}"/><Run Text="    " FontSize="8"/><Run Text="{Binding File, Mode=OneWay}" FontFamily="{StaticResource MonoFont}" FontSize="11" Foreground="#7A7A7A"/>
                                                     </TextBlock>
                                                 </Border>
                                             </DataTemplate>

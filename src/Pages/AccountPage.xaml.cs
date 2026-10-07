@@ -122,6 +122,16 @@ public partial class AccountPage : UserControl
         if (App.Config.AutoDownloadUpdates && App.Updater.State == UpdateState.Available) _ = App.Updater.CheckAsync();
     }
 
+    private void OpenLogs_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.IO.Directory.CreateDirectory(Log.Dir);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{Log.Dir}\"") { UseShellExecute = true });
+        }
+        catch { }
+    }
+
     private async void UpdNow_Click(object sender, RoutedEventArgs e) => await App.Updater.UpdateNowAsync();
     private async void UpdCheck_Click(object sender, RoutedEventArgs e) => await App.Updater.CheckAsync(manual: true);
     private void UpdNotes_Click(object sender, RoutedEventArgs e) => App.Updater.OpenReleaseNotes();

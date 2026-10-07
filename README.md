@@ -79,7 +79,7 @@
 3. **Choose how to detect:** on **Behaviour**, pick **A game launches** or **A game window is focused**.
 4. **Set your title (optional):** on **Stream Titles**, write a template and insert name pills.
 
-The **On Stream** panel in the sidebar always shows the category currently set on Twitch. When a mapped game is detected that isn't on stream, it appears underneath: **Switching in Ns** (with a timer bar) during the focus delay, or **Mapped game detected** while auto-switch is off. **Switch now** applies it immediately.
+The **On Stream** panel in the sidebar always shows the category currently set on Twitch. When a mapped game is detected that isn't on stream, it appears underneath: **Switching in Ns** (with a timer bar) during the focus delay, or **Mapped game detected** while auto-switch is off. **Switch now** applies it immediately. If several mapped games are running, use the **‹ ›** arrows to flip between them and switch to any one.
 
 ---
 
@@ -173,6 +173,7 @@ AutoSwitcher never installs an update or restarts itself without one of these: y
   - `%APPDATA%\AutoSwitcher\tokens.dat`: encrypted tokens
   - `%LOCALAPPDATA%\AutoSwitcher\art\`: cached box art
   - `%LOCALAPPDATA%\AutoSwitcher\updates\`: downloaded updates (removed after installing)
+  - `%APPDATA%\AutoSwitcher\logs\`: a small detection log (max ~2 MB). Windows that aren't mapped games are logged by exe name only, never by window title. Open it from **Settings → Open log folder**.
 - Nothing is sent anywhere except the Twitch API, plus GitHub when checking for and downloading updates.
 
 ---
@@ -181,8 +182,8 @@ AutoSwitcher never installs an update or restarts itself without one of these: y
 
 AutoSwitcher is designed to sit in the tray during a stream without being noticed:
 
-- **Focus mode is event-driven:** Windows notifies the app of foreground changes, so there's no polling loop.
-- **Launch mode** diffs the process list every 2 s and only inspects *new* processes.
+- **Focus mode is event-driven:** Windows notifies the app of foreground changes, with a cheap once-a-second check of the foreground window so a brief popup can't cancel a switch.
+- **Running games** are tracked by diffing the process list every 2 s, inspecting only *new* processes.
 - **Title matching** listens only to the focused emulator's window, not to every window on the system.
 - Game exits are detected via the process handle, also without polling.
 - In the tray, nothing is rendered and memory is trimmed.
@@ -234,6 +235,7 @@ src/
 - In focus mode, the game must stay focused for the **focus delay** (Behaviour).
 - For emulators, check the **Match window title** text appears in the window's title (use **Use current title** to copy it).
 - If a game runs as administrator, AutoSwitcher may not notice it *closing* (for the fallback category). Running AutoSwitcher as administrator too fixes that.
+- Still stuck? **Settings → Open log folder** shows what was detected and why it did or didn't switch.
 </details>
 
 <details>

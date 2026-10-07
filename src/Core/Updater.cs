@@ -123,6 +123,7 @@ public sealed class Updater
             string tag = r.GetProperty("tag_name").GetString() ?? "";
             var latest = ParseTag(tag);
             if (latest == null || latest <= CurrentVersion) { LatestTag = tag; Set(UpdateState.UpToDate); return; }
+            Log.Info("update", $"Update available: {tag} (running {CurrentTag})");
 
             LatestTag = $"v{latest.ToString(3)}";
             NotesUrl = r.TryGetProperty("html_url", out var h) ? h.GetString() : null;
@@ -280,6 +281,7 @@ public sealed class Updater
                 File.Move(part, exe, overwrite: true);
             }
 
+            Log.Info("update", $"Downloaded and verified {LatestTag}");
             await UI(() =>
             {
                 _cfg.PendingUpdate = new PendingUpdate { Version = LatestTag, ExePath = exe };
@@ -297,6 +299,7 @@ public sealed class Updater
         }
         catch (Exception ex)
         {
+            Log.Error("update", "Download failed", ex);
             TryDelete(part);
             await UI(() => { Error = ex.Message; Set(UpdateState.Error); });
             return false;
@@ -362,6 +365,7 @@ public sealed class Updater
             error = "Couldn't write the new version: " + ex.Message;
             return false;
         }
+        Log.Info("update", $"Installed {p.Version}; restarting");
         cfg.PendingUpdate = null;
         try { ConfigStore.Save(cfg); } catch { }
         return true;

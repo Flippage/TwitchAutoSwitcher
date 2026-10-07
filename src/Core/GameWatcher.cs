@@ -9,14 +9,15 @@ using System.Windows.Threading;
 namespace AutoSwitcher;
 
 /// <summary>
-/// Detects which mapped game is "current".
-///  • Focus mode: event-driven (SetWinEventHook on foreground changes) — zero polling. A game must stay
-///    focused for FocusDelay before it becomes current; any other focus change cancels the pending switch.
-///  • Launch mode: every 2s diffs the PID list (K32EnumProcesses) and only resolves paths for NEW PIDs.
-///  • Window-title rules (emulators): the same exe can map to different categories by window title.
-///    In focus mode a title-change hook is attached to the focused emulator process only; in launch mode
-///    just the emulator PIDs have their title re-read on the 2s poll. Everything else costs nothing extra.
-/// Exit of the current game is observed through a process wait handle (no polling).
+/// Detects which mapped game is "current", and keeps a list of every running mapped game.
+///
+///  • Running list (both modes): every 2 s the PID list is diffed (K32EnumProcesses); only NEW processes are
+///    inspected, so steady-state cost is tiny. Emulator PIDs with title rules have their title re-read.
+///  • Focus mode: foreground events don't decide anything by themselves. Each event (and a 1 s safety tick)
+///    triggers an evaluation that asks Windows which window REALLY has focus right now, ignoring invisible
+///    helper windows. This fixes transient popups (e.g. browser menus/tooltips) cancelling a pending switch.
+///    A game must stay focused for FocusDelay before it becomes current.
+///  • Launch mode: the newest launched mapped game becomes current.
 /// Everything runs on the UI dispatcher thread.
 /// </summary>
 public sealed class GameWatcher : IDisposable
@@ -28,8 +29,11 @@ public sealed class GameWatcher : IDisposable
     private readonly Native.WinEventDelegate _nameProc;
     private readonly DispatcherTimer _pendingTimer;
     private readonly DispatcherTimer _pollTimer;
+    private readonly DispatcherTimer _focusDebounce;
+    private readonly DispatcherTimer _focusTick;
     private readonly Dictionary<uint, GameHit?> _known = new();
-    private readonly HashSet<uint> _titleWatch = new();      // launch mode: PIDs whose exe has title rules
+    private readonly Dictionary<uint, DateTime> _firstSeen = new();
+    private readonly HashSet<uint> _titleWatch = new();
     private readonly HashSet<uint> _alive = new();
     private readonly uint _selfPid = (uint)Environment.ProcessId;
 
@@ -38,11 +42,12 @@ public sealed class GameWatcher : IDisposable
     private IntPtr _hook;
     private IntPtr _nameHook;
     private uint _nameHookPid;
-    private IntPtr _foreground;
     private GameHit? _pending;
     private Process? _exitWatch;
     private bool _primed;
     private bool _running;
+    private string _lastFocusLog = "";
+    private List<GameHit> _runningList = new();
 
     public GameHit? Current { get; private set; }
     public DetectionMode Mode { get; private set; }
@@ -56,21 +61,9 @@ public sealed class GameWatcher : IDisposable
     public DateTime PendingSinceUtc { get; private set; }
     public event Action? PendingChanged;
 
-    private void ClearPending()
-    {
-        _pendingTimer.Stop();
-        if (_pending == null) return;
-        _pending = null;
-        PendingChanged?.Invoke();
-    }
-
-    /// <summary>"Switch now" from the sidebar: skip the rest of the focus delay.</summary>
-    public void ActivatePendingNow()
-    {
-        var p = _pending;
-        ClearPending();
-        if (p != null) Activate(p);
-    }
+    /// <summary>All running mapped games, newest first.</summary>
+    public IReadOnlyList<GameHit> Running => _runningList;
+    public event Action? RunningChanged;
 
     public GameWatcher()
     {
@@ -80,11 +73,15 @@ public sealed class GameWatcher : IDisposable
         _pendingTimer.Tick += (_, _) =>
         {
             var p = _pending;
-            ClearPending();
-            if (p != null) Activate(p);
+            ClearPending("delay elapsed");
+            if (p != null) Activate(p, "focused for " + FocusDelay.TotalSeconds + "s");
         };
         _pollTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(2) };
         _pollTimer.Tick += (_, _) => Poll();
+        _focusDebounce = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(150) };
+        _focusDebounce.Tick += (_, _) => { _focusDebounce.Stop(); EvaluateFocus(immediate: false); };
+        _focusTick = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1) };
+        _focusTick.Tick += (_, _) => EvaluateFocus(immediate: false);
     }
 
     /// <summary>"Donkey Kong 64*USA" → case-insensitive "contains", * = any text.</summary>
@@ -98,6 +95,7 @@ public sealed class GameWatcher : IDisposable
     {
         var byPath = new Dictionary<string, List<Candidate>>(StringComparer.OrdinalIgnoreCase);
         var byName = new Dictionary<string, List<Candidate>>(StringComparer.OrdinalIgnoreCase);
+        int count = 0;
         foreach (var c in categories)
             foreach (var e in c.Executables)
             {
@@ -110,11 +108,14 @@ public sealed class GameWatcher : IDisposable
                 var cand = new Candidate(c, e, rx);
                 Add(byPath, e.Path, cand);
                 Add(byName, e.ProcessName, cand);   // fallback if the game was moved/reinstalled
+                count++;
             }
         _byPath = byPath;
         _byName = byName;
+        Log.Info("detect", $"Mappings loaded: {count} executable(s)");
 
         _known.Clear();
+        _firstSeen.Clear();
         _titleWatch.Clear();
         _primed = false;
         if (Current != null && Resolve((uint)Current.Pid, null) is { } still) Current = still;
@@ -132,19 +133,20 @@ public sealed class GameWatcher : IDisposable
         Stop();
         _running = true;
         Mode = mode;
+        Log.Info("detect", $"Started in {mode} mode (focus delay {FocusDelay.TotalSeconds}s)");
+        _known.Clear();
+        _firstSeen.Clear();
+        _titleWatch.Clear();
+        _primed = false;
+        Poll();
+        _pollTimer.Start();
         if (mode == DetectionMode.Focus)
         {
             _hook = Native.SetWinEventHook(Native.EVENT_SYSTEM_FOREGROUND, Native.EVENT_SYSTEM_FOREGROUND,
                 IntPtr.Zero, _hookProc, 0, 0, Native.WINEVENT_OUTOFCONTEXT | Native.WINEVENT_SKIPOWNPROCESS);
-            HandleForeground(Native.GetForegroundWindow(), immediate: true);
-        }
-        else
-        {
-            _known.Clear();
-            _titleWatch.Clear();
-            _primed = false;
-            Poll();
-            _pollTimer.Start();
+            if (_hook == IntPtr.Zero) Log.Warn("detect", "Foreground hook failed; relying on the 1s check");
+            EvaluateFocus(immediate: true);
+            _focusTick.Start();
         }
     }
 
@@ -154,7 +156,9 @@ public sealed class GameWatcher : IDisposable
         if (_hook != IntPtr.Zero) { Native.UnhookWinEvent(_hook); _hook = IntPtr.Zero; }
         UnhookNameChange();
         _pollTimer.Stop();
-        ClearPending();
+        _focusTick.Stop();
+        _focusDebounce.Stop();
+        ClearPending("stopped");
     }
 
     // ---------------------------------------------------------------- resolution
@@ -199,50 +203,89 @@ public sealed class GameWatcher : IDisposable
     private bool IsCurrent(GameHit hit) =>
         Current != null && Current.Pid == hit.Pid && ReferenceEquals(Current.Exe, hit.Exe);
 
+    private static bool Same(GameHit? a, GameHit? b) =>
+        a != null && b != null && a.Pid == b.Pid && ReferenceEquals(a.Exe, b.Exe);
+
+    private static string Describe(GameHit h) => $"{h.Exe.FileName} (pid {h.Pid}) → {h.Category.Name}";
+
     // ---------------------------------------------------------------- focus mode
 
+    // Events only *trigger* an evaluation; the evaluation reads the real foreground window.
     private void OnForegroundEvent(IntPtr hook, uint evt, IntPtr hwnd, int idObject, int idChild, uint thread, uint time)
-        => HandleForeground(hwnd, immediate: false);
-
-    private void HandleForeground(IntPtr hwnd, bool immediate)
     {
-        // Any focus change cancels a pending switch (this is the "clicking back and forth" buffer).
-        ClearPending();
-        _foreground = hwnd;
-
-        if (hwnd == IntPtr.Zero) { UnhookNameChange(); return; }
-        Native.GetWindowThreadProcessId(hwnd, out uint pid);
-        if (pid == 0 || pid == _selfPid) { UnhookNameChange(); return; }
-
-        // Emulator with title rules: also listen for its title changing (loading another game).
-        if (HasTitleRules(pid)) HookNameChange(pid); else UnhookNameChange();
-
-        var hit = Resolve(pid, Native.GetTitle(hwnd));
-        if (hit == null || IsCurrent(hit)) return;                          // not a game, or already current
-        Schedule(hit, immediate);
+        _focusDebounce.Stop();
+        _focusDebounce.Start();
     }
 
     private void OnNameChangeEvent(IntPtr hook, uint evt, IntPtr hwnd, int idObject, int idChild, uint thread, uint time)
     {
-        if (idObject != Native.OBJID_WINDOW || idChild != 0 || hwnd != _foreground) return;
+        if (idObject != Native.OBJID_WINDOW || idChild != 0) return;
+        _focusDebounce.Stop();
+        _focusDebounce.Start();
+    }
+
+    private void EvaluateFocus(bool immediate)
+    {
+        if (!_running || Mode != DetectionMode.Focus) return;
+
+        IntPtr hwnd = Native.GetForegroundWindow();
+        if (hwnd == IntPtr.Zero) return;                                   // mid-switch: no decision
         Native.GetWindowThreadProcessId(hwnd, out uint pid);
+        if (pid == 0 || pid == _selfPid) return;                           // our own window: keep state
+        if (!Native.IsWindowVisible(hwnd)) return;                         // invisible helper window: ignore
+
+        if (HasTitleRules(pid)) HookNameChange(pid); else UnhookNameChange();
+
         var hit = Resolve(pid, Native.GetTitle(hwnd));
-        if (hit == null) return;                                             // e.g. emulator menu: keep current
-        if (IsCurrent(hit)) { ClearPending(); return; }
-        // Titles that tick (FPS counters) must not keep restarting the same pending switch.
-        if (_pending != null && _pending.Pid == hit.Pid && ReferenceEquals(_pending.Exe, hit.Exe)) return;
-        Schedule(hit, immediate: false);
+        LogFocus(pid, hit);
+
+        if (hit == null)
+        {
+            // A real, visible non-game window has focus: the user moved away.
+            if (_pending != null) ClearPending("focus moved to a non-game window");
+            return;
+        }
+        if (IsCurrent(hit)) { if (_pending != null) ClearPending("back on the current game"); return; }
+        if (Same(_pending, hit)) return;                                   // already counting down for it
+        Schedule(hit, immediate);
+    }
+
+    private void LogFocus(uint pid, GameHit? hit)
+    {
+        string what = hit != null ? "mapped " + Describe(hit)
+                                  : "other app " + (Path.GetFileName(Native.GetProcessPath(pid) ?? "") is { Length: > 0 } f ? f : "pid " + pid);
+        if (what == _lastFocusLog) return;
+        _lastFocusLog = what;
+        Log.Info("focus", "Focused: " + what);
     }
 
     private void Schedule(GameHit hit, bool immediate)
     {
-        ClearPending();
-        if (immediate || FocusDelay <= TimeSpan.Zero) { Activate(hit); return; }
+        ClearPending(null);
+        if (immediate || FocusDelay <= TimeSpan.Zero) { Activate(hit, immediate ? "focused at start" : "focused (no delay)"); return; }
         _pending = hit;
         PendingSinceUtc = DateTime.UtcNow;
         _pendingTimer.Interval = FocusDelay;
         _pendingTimer.Start();
+        Log.Info("focus", $"Pending switch in {FocusDelay.TotalSeconds}s: {Describe(hit)}");
         PendingChanged?.Invoke();
+    }
+
+    private void ClearPending(string? reason)
+    {
+        _pendingTimer.Stop();
+        if (_pending == null) return;
+        if (reason != null) Log.Info("focus", $"Pending switch cancelled ({reason}): {Describe(_pending)}");
+        _pending = null;
+        PendingChanged?.Invoke();
+    }
+
+    /// <summary>"Switch now" from the sidebar: skip the rest of the focus delay.</summary>
+    public void ActivatePendingNow()
+    {
+        var p = _pending;
+        ClearPending(null);
+        if (p != null) Activate(p, "Switch now");
     }
 
     private void HookNameChange(uint pid)
@@ -261,13 +304,14 @@ public sealed class GameWatcher : IDisposable
         _nameHookPid = 0;
     }
 
-    // ---------------------------------------------------------------- launch mode
+    // ---------------------------------------------------------------- process scan (both modes)
 
     private void Poll()
     {
         var ids = Native.EnumProcessIds();
         _alive.Clear();
         GameHit? newest = null;
+        bool changed = false;
         foreach (uint id in ids)
         {
             _alive.Add(id);
@@ -279,12 +323,20 @@ public sealed class GameWatcher : IDisposable
                 if (HasTitleRules(id)) _titleWatch.Add(id);
             }
             _known[id] = hit;
-            if (hit != null) newest = hit;
+            if (hit != null)
+            {
+                _firstSeen[id] = DateTime.UtcNow;
+                newest = hit;
+                changed = true;
+                if (_primed) Log.Info("scan", "Started: " + Describe(hit));
+            }
         }
         if (_known.Count > _alive.Count)
             foreach (uint dead in _known.Keys.Where(k => !_alive.Contains(k)).ToList())
             {
+                if (_known[dead] is { } gone) { changed = true; Log.Info("scan", "Closed: " + Describe(gone)); }
                 _known.Remove(dead);
+                _firstSeen.Remove(dead);
                 _titleWatch.Remove(dead);
             }
 
@@ -293,21 +345,40 @@ public sealed class GameWatcher : IDisposable
         {
             var now = Resolve(pid, null);
             var before = _known[pid];
-            bool changed = now != null && (before == null || !ReferenceEquals(before.Exe, now.Exe));
-            _known[pid] = now ?? before;                                     // menu/no match: keep last game
-            if (changed && _primed) newest = now;
+            bool swapped = now != null && (before == null || !ReferenceEquals(before.Exe, now.Exe));
+            if (swapped)
+            {
+                _known[pid] = now;
+                _firstSeen[pid] = DateTime.UtcNow;
+                changed = true;
+                if (_primed) { newest = now; Log.Info("scan", "Title matched: " + Describe(now!)); }
+            }
         }
+
+        if (changed || !_primed) RebuildRunning();
 
         bool wasPrimed = _primed;
         _primed = true;
-        if (newest != null && (wasPrimed || Current == null) && !IsCurrent(newest)) Activate(newest);
+        if (Mode == DetectionMode.Launch && newest != null && (wasPrimed || Current == null) && !IsCurrent(newest))
+            Activate(newest, "launched");
+    }
+
+    private void RebuildRunning()
+    {
+        _runningList = _known
+            .Where(kv => kv.Value != null)
+            .OrderByDescending(kv => _firstSeen.TryGetValue(kv.Key, out var t) ? t : DateTime.MinValue)
+            .Select(kv => kv.Value!)
+            .ToList();
+        RunningChanged?.Invoke();
     }
 
     // ---------------------------------------------------------------- shared
 
-    private void Activate(GameHit hit)
+    private void Activate(GameHit hit, string why)
     {
         Current = hit;
+        Log.Info("detect", $"Current game ({why}): {Describe(hit)}");
         WatchExit(hit.Pid);
         Activated?.Invoke(hit);
     }
@@ -324,7 +395,11 @@ public sealed class GameWatcher : IDisposable
             p.Exited += (_, _) => _ui.InvokeAsync(() => OnExited(pid));
             _exitWatch = p;
         }
-        catch { /* elevated games can deny SYNCHRONIZE access; we just won't see the exit */ }
+        catch (Exception ex)
+        {
+            // Elevated games can deny access; the 2 s scan still notices the exit.
+            Log.Warn("detect", $"Can't watch pid {pid} for exit ({ex.GetType().Name}); using the process scan instead");
+        }
     }
 
     private static int SafeId(Process p)
@@ -334,16 +409,16 @@ public sealed class GameWatcher : IDisposable
 
     private void OnExited(int pid)
     {
+        if (_known.Remove((uint)pid)) { _firstSeen.Remove((uint)pid); _titleWatch.Remove((uint)pid); RebuildRunning(); }
         if (Current == null || Current.Pid != pid) return;
         var gone = Current;
         Current = null;
-        _known.Remove((uint)pid);
-        _titleWatch.Remove((uint)pid);
+        Log.Info("detect", "Current game closed: " + Describe(gone));
 
-        if (Mode == DetectionMode.Launch)
+        if (Mode == DetectionMode.Launch && _runningList.FirstOrDefault() is { } other)
         {
-            var other = _known.Values.LastOrDefault(h => h != null && h.Pid != pid);
-            if (other != null) { Activate(other); return; }
+            Activate(other, "previous game closed");
+            return;
         }
         Exited?.Invoke(gone);
     }

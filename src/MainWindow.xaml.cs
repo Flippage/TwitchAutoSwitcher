@@ -17,8 +17,10 @@ public partial class MainWindow : Window
     private readonly AccountPage _settings = new();
 
     private readonly DispatcherTimer _countdown = new(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(100) };
-    private GameHit? _detected;
-    private bool _detectedIsPending;
+    private readonly System.Collections.Generic.List<GameHit> _stack = new();
+    private int _stackIndex;
+    private GameHit? _lastPendingSeen;
+    private bool _fading;
 
     public MainWindow()
     {
@@ -29,6 +31,7 @@ public partial class MainWindow : Window
         App.Twitch.AuthChanged += () => Dispatcher.InvokeAsync(UpdateAccountChip);
         App.Switcher.Changed += () => Dispatcher.InvokeAsync(() => { UpdateLiveBadge(); UpdateNowPlaying(); });
         App.Watcher.PendingChanged += () => Dispatcher.InvokeAsync(UpdateNowPlaying);
+        App.Watcher.RunningChanged += () => Dispatcher.InvokeAsync(UpdateNowPlaying);
         App.Updater.Changed += () => Dispatcher.InvokeAsync(UpdateUpdateBadge);
         App.Updater.Notice += downloaded => Dispatcher.InvokeAsync(() => QueueUpdateToast(downloaded));
         _countdown.Tick += (_, _) => UpdateCountdown();
@@ -108,6 +111,12 @@ public partial class MainWindow : Window
     private static readonly Brush OffAirBrush = Frozen(0xEF, 0x44, 0x44);
     private static readonly Brush DetAmberBg = Frozen(0x1F, 0x1A, 0x10);
     private static readonly Brush DetCyanBg = Frozen(0x0F, 0x22, 0x26);
+    private static readonly Brush DetAmberBack1 = Frozen(0x19, 0x15, 0x0D);
+    private static readonly Brush DetAmberBack2 = Frozen(0x14, 0x11, 0x0B);
+    private static readonly Brush DetAmberBackLine = Frozen(0x3D, 0x2F, 0x12);
+    private static readonly Brush DetCyanBack1 = Frozen(0x0D, 0x1C, 0x1F);
+    private static readonly Brush DetCyanBack2 = Frozen(0x0B, 0x17, 0x19);
+    private static readonly Brush DetCyanBackLine = Frozen(0x18, 0x30, 0x2F);
 
     private void UpdateLiveBadge()
     {
@@ -126,9 +135,12 @@ public partial class MainWindow : Window
 
     private bool _syncingSide;
 
+    private static bool Same(GameHit? a, GameHit? b) =>
+        a != null && b != null && a.Pid == b.Pid && ReferenceEquals(a.Exe, b.Exe);
+
     /// <summary>
-    /// Big card = what's on Twitch right now. A second box appears only when a detected mapped game
-    /// differs from it: "Switching in Ns" (auto-switch, focus delay running) or "Mapped game detected".
+    /// Big card = what's on Twitch right now. Underneath, a stack of running mapped games that aren't on stream:
+    /// the pending switch first (cyan, "Switching in Ns"), then the current game, then the rest (newest first).
     /// </summary>
     private void UpdateNowPlaying()
     {
@@ -144,111 +156,180 @@ public partial class MainWindow : Window
         _syncingSide = false;
         AutoOffTag.Visibility = cfg.AutoSwitch ? Visibility.Collapsed : Visibility.Visible;
 
-        _detected = null;
-        _detectedIsPending = false;
-
+        // ---- big card
         if (hasLive)
         {
             NowLabel.Text = "ON STREAM";
-            NowGame.Text = live!.GameName;
+            FitText(NowGame, live!.GameName, 160, new[] { 14.0, 13.0, 12.0 }, 2);
             NowGame.Foreground = (Brush)FindResource("TextBrush");
             _ = ShowLiveArtAsync(live.GameId);
-
             bool hitMatches = hit != null && hit.Category.Id == live.GameId;
-            if (pending != null && pending.Category.Id != live.GameId) { _detected = pending; _detectedIsPending = cfg.AutoSwitch; }
-            else if (hit != null && !hitMatches) _detected = hit;
-
-            if (hitMatches && _detected == null)
+            if (hitMatches)
             {
                 NowExe.Text = "✓ " + hit!.Exe.FullName + " · detected";
                 NowExe.Foreground = OnAirBrush;
-                NowCard.ToolTip = $"{hit.Exe.FullName} ({hit.Exe.FileName}) → {hit.Category.Name}";
             }
             else
             {
-                NowExe.Text = _detected == null ? "No mapped game detected" : "Set on Twitch";
+                NowExe.Text = App.Watcher.Running.Count == 0 ? "No mapped game detected" : "Set on Twitch";
                 NowExe.Foreground = (Brush)FindResource("SubBrush");
-                NowCard.ToolTip = "Your current Twitch category";
             }
-            NowExe.Visibility = Visibility.Visible;
+            NowCard.ToolTip = live.GameName;
         }
         else if (hit != null)
         {
             // Not connected (or no category on Twitch yet): show the detected game.
             _liveArtId = null;
             NowLabel.Text = "DETECTED";
-            NowGame.Text = hit.Category.Name;
+            FitText(NowGame, hit.Category.Name, 160, new[] { 14.0, 13.0, 12.0 }, 2);
             NowGame.Foreground = (Brush)FindResource("TextBrush");
             NowExe.Text = hit.Exe.FullName;
             NowExe.Foreground = (Brush)FindResource("SubBrush");
-            NowExe.Visibility = Visibility.Visible;
             Art.SetUrl(NowArt, hit.Category.BoxArtUrl);
             NowArtIdle.Visibility = Visibility.Collapsed;
-            NowCard.ToolTip = $"{hit.Exe.FullName} ({hit.Exe.FileName}) → {hit.Category.Name}";
+            NowCard.ToolTip = hit.Category.Name;
         }
         else
         {
             _liveArtId = null;
             NowLabel.Text = "ON STREAM";
-            NowGame.Text = !App.Twitch.IsSignedIn ? "Not connected"
-                         : cfg.Categories.Count == 0 ? "No games mapped yet" : "Waiting for a game…";
+            string t = !App.Twitch.IsSignedIn ? "Not connected"
+                     : cfg.Categories.Count == 0 ? "No games mapped yet" : "Waiting for a game…";
+            FitText(NowGame, t, 160, new[] { 14.0 }, 2);
             NowGame.Foreground = (Brush)FindResource("Text2Brush");
             NowExe.Text = !App.Twitch.IsSignedIn ? "Connect Twitch in Settings"
                         : cfg.Categories.Count == 0 ? "Add one on Mappings" : "Launch or focus a mapped game";
             NowExe.Foreground = (Brush)FindResource("SubBrush");
-            NowExe.Visibility = Visibility.Visible;
             Art.SetUrl(NowArt, null);
             NowArt.Background = new SolidColorBrush(Color.FromRgb(0x1F, 0x1F, 0x1F));
             NowArtIdle.Visibility = Visibility.Visible;
             NowCard.ToolTip = null;
         }
+        NowExe.Visibility = Visibility.Visible;
 
-        // Detected box
-        if (_detected != null)
-        {
-            DetBox.Visibility = Visibility.Visible;
-            DetName.Text = _detected.Category.Name;
-            DetExe.Text = _detected.Exe.FullName;
-            Art.SetUrl(DetArt, _detected.Category.BoxArtUrl);
-            if (_detectedIsPending)
-            {
-                DetBox.Background = DetCyanBg;
-                DetBox.BorderBrush = (Brush)FindResource("AccentLineBrush");
-                DetLabel.Foreground = (Brush)FindResource("AccentBrush");
-                DetBtn.Foreground = (Brush)FindResource("AccentBrush");
-                DetBtn.BorderBrush = (Brush)FindResource("AccentLineBrush");
-                DetBarTrack.Visibility = Visibility.Visible;
-                UpdateCountdown();
-                _countdown.Start();
-            }
-            else
-            {
-                DetBox.Background = DetAmberBg;
-                DetBox.BorderBrush = (Brush)FindResource("WarnLineBrush");
-                DetLabel.Foreground = (Brush)FindResource("WarnBrush");
-                DetLabel.Text = "MAPPED GAME DETECTED";
-                DetBtn.Foreground = (Brush)FindResource("WarnTextBrush");
-                DetBtn.BorderBrush = (Brush)FindResource("WarnLineBrush");
-                DetBarTrack.Visibility = Visibility.Collapsed;
-                _countdown.Stop();
-            }
-        }
-        else
-        {
-            DetBox.Visibility = Visibility.Collapsed;
-            _countdown.Stop();
-        }
+        // ---- stack of running games not on stream
+        bool OnStream(GameHit g) => hasLive ? g.Category.Id == live!.GameId : Same(g, hit);
+        var previous = _stack.Count > 0 && _stackIndex < _stack.Count ? _stack[_stackIndex] : null;
+        _stack.Clear();
+        if (pending != null && !OnStream(pending)) _stack.Add(pending);
+        if (hit != null && !OnStream(hit) && !_stack.Exists(g => Same(g, hit))) _stack.Add(hit);
+        foreach (var r in App.Watcher.Running)
+            if (!OnStream(r) && !_stack.Exists(g => Same(g, r))) _stack.Add(r);
 
+        // Keep the user's place; jump to a new pending switch when one starts.
+        bool newPending = pending != null && !Same(pending, _lastPendingSeen);
+        _lastPendingSeen = pending;
+        int keep = newPending ? 0 : _stack.FindIndex(g => Same(g, previous));
+        _stackIndex = keep >= 0 ? keep : 0;
+
+        ShowStackCard();
         string? err = App.Switcher.LastError;
         NowError.Text = err ?? "";
         NowError.Visibility = string.IsNullOrEmpty(err) ? Visibility.Collapsed : Visibility.Visible;
         UpdateArtVisibility();
     }
 
+    private void ShowStackCard()
+    {
+        int n = _stack.Count;
+        if (n == 0)
+        {
+            DetStack.Visibility = Visibility.Collapsed;
+            _countdown.Stop();
+            return;
+        }
+        DetStack.Visibility = Visibility.Visible;
+        var g = _stack[Math.Clamp(_stackIndex, 0, n - 1)];
+        bool isPending = App.Config.AutoSwitch && Same(g, App.Watcher.Pending);
+
+        FitText(DetName, g.Category.Name, 107, new[] { 11.5, 10.5, 9.5 }, 2);
+        DetName.ToolTip = g.Category.Name;
+        DetExe.Text = g.Exe.FullName;
+        Art.SetUrl(DetArt, g.Category.BoxArtUrl);
+
+        bool multi = n > 1;
+        DetCounter.Text = $"{_stackIndex + 1}/{n}";
+        DetCounter.Visibility = multi ? Visibility.Visible : Visibility.Collapsed;
+        DetPrev.Visibility = DetNext.Visibility = multi ? Visibility.Visible : Visibility.Collapsed;
+        DetBack1.Visibility = n >= 2 ? Visibility.Visible : Visibility.Collapsed;
+        DetBack2.Visibility = n >= 3 ? Visibility.Visible : Visibility.Collapsed;
+
+        Brush line = (Brush)FindResource(isPending ? "AccentLineBrush" : "WarnLineBrush");
+        Brush fg = (Brush)FindResource(isPending ? "AccentBrush" : "WarnBrush");
+        Brush btnFg = (Brush)FindResource(isPending ? "AccentBrush" : "WarnTextBrush");
+        DetBox.Background = isPending ? DetCyanBg : DetAmberBg;
+        DetBox.BorderBrush = line;
+        DetBack1.Background = isPending ? DetCyanBack1 : DetAmberBack1;
+        DetBack2.Background = isPending ? DetCyanBack2 : DetAmberBack2;
+        DetBack1.BorderBrush = DetBack2.BorderBrush = isPending ? DetCyanBackLine : DetAmberBackLine;
+        DetLabel.Foreground = fg;
+        foreach (var b in new[] { DetBtn, DetPrev, DetNext }) { b.Foreground = btnFg; b.BorderBrush = line; }
+
+        if (isPending)
+        {
+            DetBarTrack.Visibility = Visibility.Visible;
+            UpdateCountdown();
+            _countdown.Start();
+        }
+        else
+        {
+            DetLabel.Text = "MAPPED GAME DETECTED";
+            DetBarTrack.Visibility = Visibility.Collapsed;
+            _countdown.Stop();
+        }
+    }
+
+    /// <summary>‹ › : fade out (150 ms) → next game → fade in (150 ms).</summary>
+    private void FlipStack(int delta)
+    {
+        if (_fading || _stack.Count < 2) return;
+        _fading = true;
+        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(150)) { EasingFunction = new QuadraticEase() };
+        fadeOut.Completed += (_, _) =>
+        {
+            _stackIndex = (_stackIndex + delta + _stack.Count) % _stack.Count;
+            ShowStackCard();
+            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(150)) { EasingFunction = new QuadraticEase() };
+            fadeIn.Completed += (_, _) => _fading = false;
+            DetContent.BeginAnimation(OpacityProperty, fadeIn);
+        };
+        DetContent.BeginAnimation(OpacityProperty, fadeOut);
+    }
+
+    private void DetPrev_Click(object sender, RoutedEventArgs e) => FlipStack(-1);
+    private void DetNext_Click(object sender, RoutedEventArgs e) => FlipStack(+1);
+
+    /// <summary>
+    /// Largest font size (from <paramref name="sizes"/>, biggest first) at which the text fits in
+    /// <paramref name="maxLines"/> lines; at the smallest size anything left over is trimmed with "…".
+    /// </summary>
+    private static void FitText(TextBlock tb, string text, double width, double[] sizes, int maxLines)
+    {
+        tb.Text = text;
+        double w = tb.ActualWidth > 20 ? tb.ActualWidth : width;
+        double dpi = 1.0;
+        try { dpi = VisualTreeHelper.GetDpi(tb).PixelsPerDip; } catch { }
+        var face = new Typeface(tb.FontFamily, tb.FontStyle, tb.FontWeight, tb.FontStretch);
+        double chosen = sizes[^1], lineH = 0;
+        foreach (double size in sizes)
+        {
+            var one = new FormattedText("Ag", System.Globalization.CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, face, size, Brushes.White, dpi);
+            var full = new FormattedText(text, System.Globalization.CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, face, size, Brushes.White, dpi)
+            { MaxTextWidth = Math.Max(10, w) };
+            lineH = one.Height;
+            chosen = size;
+            if (full.Height <= lineH * maxLines + 0.5) break;
+        }
+        tb.FontSize = chosen;
+        tb.MaxHeight = lineH * maxLines + 1;
+    }
+
     /// <summary>Only ticks while a switch is pending (100 ms), so it costs nothing otherwise.</summary>
     private void UpdateCountdown()
     {
-        if (!_detectedIsPending || App.Watcher.Pending == null) { _countdown.Stop(); return; }
+        var pending = App.Watcher.Pending;
+        bool showing = _stack.Count > 0 && _stackIndex < _stack.Count && Same(_stack[_stackIndex], pending);
+        if (!showing || !App.Config.AutoSwitch) { _countdown.Stop(); return; }
         double total = Math.Max(0.1, App.Watcher.FocusDelay.TotalSeconds);
         double elapsed = (DateTime.UtcNow - App.Watcher.PendingSinceUtc).TotalSeconds;
         double remaining = Math.Max(0, total - elapsed);
@@ -256,24 +337,25 @@ public partial class MainWindow : Window
         DetBarScale.ScaleX = Math.Clamp(elapsed / total, 0, 1);
     }
 
-    /// <summary>The box art hides on windows too short to fit everything (more room needed with the detected box).</summary>
+    /// <summary>The box art hides on windows too short to fit everything (more room needed with the stack).</summary>
     private void UpdateArtVisibility()
     {
-        double needed = DetBox.Visibility == Visibility.Visible ? 890 : 790;
+        double needed = DetStack.Visibility == Visibility.Visible ? 890 : 790;
         NowArtBox.Visibility = ActualHeight > 0 && ActualHeight < needed ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private async void SwitchNow_Click(object sender, RoutedEventArgs e)
     {
-        var target = _detected;
-        if (target == null) return;
-        if (App.Watcher.Pending != null && ReferenceEquals(App.Watcher.Pending, target))
+        if (_stack.Count == 0) return;
+        var target = _stack[Math.Clamp(_stackIndex, 0, _stack.Count - 1)];
+        Log.Info("ui", $"Switch now: {target.Exe.FileName} → {target.Category.Name}");
+        if (Same(App.Watcher.Pending, target))
         {
             App.Watcher.ActivatePendingNow();          // auto-switch on: the normal switch path applies it
             if (App.Config.AutoSwitch) return;
         }
         DetBtn.IsEnabled = false;
-        await App.Switcher.SwitchNowAsync(target);    // auto-switch off: apply this game anyway
+        await App.Switcher.SwitchNowAsync(target);    // anything else: apply this game now
         DetBtn.IsEnabled = true;
     }
 
@@ -390,6 +472,18 @@ public partial class MainWindow : Window
         UpdateLayout();
         HideToast();
         UpdateNowPlaying();
+        UpdateLayout();
+    }
+
+    /// <summary>Used by --selftest: flip through the detected-games stack.</summary>
+    public async System.Threading.Tasks.Task SelfTestFlipStackAsync()
+    {
+        UpdateNowPlaying();
+        if (_stack.Count < 2) throw new InvalidOperationException($"Self-test expected 2+ running games in the stack, found {_stack.Count}.");
+        FlipStack(+1);
+        await System.Threading.Tasks.Task.Delay(500);
+        FlipStack(-1);
+        await System.Threading.Tasks.Task.Delay(500);
         UpdateLayout();
     }
 

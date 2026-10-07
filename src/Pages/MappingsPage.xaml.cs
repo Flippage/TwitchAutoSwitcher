@@ -19,6 +19,8 @@ public sealed class ExeChip
 {
     public required string Name { get; init; }
     public required string File { get; init; }
+    /// <summary>"Zelda OOT  " (with spacing) when a custom name is set, else empty.</summary>
+    public string CustomPrefix { get; init; } = "";
     public required string Path { get; init; }
     public required Brush Background { get; init; }
     public required Brush Foreground { get; init; }
@@ -59,6 +61,7 @@ public partial class MappingsPage : UserControl
             Chips = c.Executables.Select(e => new ExeChip
             {
                 Name = string.IsNullOrWhiteSpace(e.FullName) ? e.ProcessName : e.FullName,
+                CustomPrefix = string.IsNullOrWhiteSpace(e.CustomName) ? "" : e.CustomName.Trim() + "   ",
                 File = e.UsesTitle ? $"{e.FileName}  · title: “{e.TitlePattern}”" : e.FileName,
                 Path = e.Path,
                 Background = ReferenceEquals(e, active) ? ActiveBg : ChipBg,

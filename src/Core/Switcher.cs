@@ -132,6 +132,7 @@ public sealed class Switcher
             if (newGame == null && newTitle == null) { LastError = null; return true; }
 
             bool ok = await _tw.UpdateChannelAsync(newGame, newTitle);
+            Log.Info("twitch", $"Update {(ok ? "OK" : "FAILED")}: category={(newGame != null ? gameName : "(unchanged)")}, title={(newTitle != null ? "changed" : "(unchanged)")} [{reason ?? "manual"}]");
             if (!ok)
             {
                 LastError = "Twitch didn't accept the update. Try reconnecting your account.";
@@ -164,6 +165,7 @@ public sealed class Switcher
         }
         catch (Exception ex)
         {
+            Log.Error("twitch", "Update failed", ex);
             LastError = ex.Message;
             return false;
         }

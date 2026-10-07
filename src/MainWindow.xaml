@@ -78,32 +78,64 @@
                         <TextBlock x:Name="NowError" FontSize="11" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap"
                                    TextAlignment="Center" Margin="0,6,0,0" Visibility="Collapsed"/>
 
-                        <!-- Detected mapped game that isn't on stream (yet) -->
-                        <Border x:Name="DetBox" Margin="0,10,0,0" Padding="8" CornerRadius="9" BorderThickness="1" Visibility="Collapsed">
-                            <StackPanel>
-                                <TextBlock x:Name="DetLabel" FontSize="9.5" FontWeight="Bold"/>
-                                <DockPanel Margin="0,6,0,0">
-                                    <Border x:Name="DetArt" Width="27" Height="36" CornerRadius="3" DockPanel.Dock="Left"/>
-                                    <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
-                                        <TextBlock x:Name="DetName" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap"
-                                                   LineHeight="14" LineStackingStrategy="BlockLineHeight" MaxHeight="28"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock x:Name="DetExe" FontSize="10.5" Foreground="{StaticResource SubBrush}"
-                                                   TextTrimming="CharacterEllipsis"/>
+                        <!-- Running mapped games that aren't on stream: a stack you can flip through -->
+                        <Grid x:Name="DetStack" Margin="0,10,0,0" Visibility="Collapsed">
+                            <Border x:Name="DetBack2" Margin="-8,16" CornerRadius="9" BorderThickness="1" Visibility="Collapsed"/>
+                            <Border x:Name="DetBack1" Margin="-4,8" CornerRadius="9" BorderThickness="1" Visibility="Collapsed"/>
+                            <Border x:Name="DetBox" Padding="8" CornerRadius="9" BorderThickness="1">
+                                <StackPanel>
+                                    <StackPanel x:Name="DetContent">
+                                        <DockPanel>
+                                            <TextBlock x:Name="DetCounter" DockPanel.Dock="Right" FontSize="9.5" FontWeight="Bold"
+                                                       Foreground="{StaticResource SubBrush}" Visibility="Collapsed"/>
+                                            <TextBlock x:Name="DetLabel" FontSize="9.5" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        </DockPanel>
+                                        <DockPanel Margin="0,6,0,0" MinHeight="36">
+                                            <Border x:Name="DetArt" Width="27" Height="36" CornerRadius="3" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+                                            <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock x:Name="DetName" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock x:Name="DetExe" FontSize="10.5" Foreground="{StaticResource SubBrush}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                        <Border x:Name="DetBarTrack" Height="3" CornerRadius="2" Margin="0,7,0,0"
+                                                Background="{StaticResource AccentLineBrush}" Visibility="Collapsed">
+                                            <Border CornerRadius="2" Background="{StaticResource AccentBrush}" RenderTransformOrigin="0,0.5">
+                                                <Border.RenderTransform>
+                                                    <ScaleTransform x:Name="DetBarScale" ScaleX="0"/>
+                                                </Border.RenderTransform>
+                                            </Border>
+                                        </Border>
                                     </StackPanel>
-                                </DockPanel>
-                                <Border x:Name="DetBarTrack" Height="3" CornerRadius="2" Margin="0,7,0,0"
-                                        Background="{StaticResource AccentLineBrush}" Visibility="Collapsed">
-                                    <Border CornerRadius="2" Background="{StaticResource AccentBrush}" RenderTransformOrigin="0,0.5">
-                                        <Border.RenderTransform>
-                                            <ScaleTransform x:Name="DetBarScale" ScaleX="0"/>
-                                        </Border.RenderTransform>
-                                    </Border>
-                                </Border>
-                                <Button x:Name="DetBtn" Style="{StaticResource PillButton}" Height="28" Margin="0,8,0,0"
-                                        FontWeight="Bold" Content="Switch now" Click="SwitchNow_Click"/>
-                            </StackPanel>
-                        </Border>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="DetPrev" Style="{StaticResource PillButton}" Width="22" Height="22" Padding="0"
+                                                Margin="0,0,5,0" ToolTip="Previous game" Click="DetPrev_Click" Visibility="Collapsed">
+                                            <Viewbox Width="9" Height="9">
+                                                <Path Style="{StaticResource Icon}" Data="M15,6 L9,12 L15,18" StrokeThickness="3.2"
+                                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                            </Viewbox>
+                                        </Button>
+                                        <Button x:Name="DetBtn" Grid.Column="1" Style="{StaticResource PillButton}" Height="26" Padding="4,0"
+                                                FontWeight="Bold" Click="SwitchNow_Click">
+                                            <TextBlock Text="Switch now" TextTrimming="CharacterEllipsis"/>
+                                        </Button>
+                                        <Button x:Name="DetNext" Grid.Column="2" Style="{StaticResource PillButton}" Width="22" Height="22" Padding="0"
+                                                Margin="5,0,0,0" ToolTip="Next game" Click="DetNext_Click" Visibility="Collapsed">
+                                            <Viewbox Width="9" Height="9">
+                                                <Path Style="{StaticResource Icon}" Data="M9,6 L15,12 L9,18" StrokeThickness="3.2"
+                                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                            </Viewbox>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
 
                         <Rectangle Height="1" Fill="#242424" Margin="0,12,0,8"/>
                         <DockPanel Margin="0,2,0,0">
