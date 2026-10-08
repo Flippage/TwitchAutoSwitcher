@@ -288,6 +288,26 @@ public sealed class GameWatcher : IDisposable
         if (p != null) Activate(p, "Switch now");
     }
 
+    /// <summary>Drop a pending switch without applying it (a manual switch replaced it).</summary>
+    public void ClearPendingNow() => ClearPending("manual switch");
+
+    /// <summary>
+    /// Auto-switch was turned back on: forget which game was "current" (a manual switch may have changed Twitch
+    /// since), then pick up from what's actually happening now. Focus mode: the focused game (with the usual
+    /// delay; nothing while AutoSwitcher itself is focused, so the next game you click counts).
+    /// Launch mode: the newest running mapped game.
+    /// </summary>
+    public void Resync()
+    {
+        if (!_running) return;
+        Log.Info("detect", "Resync after auto-switch resumed");
+        Current = null;
+        _lastFocusLog = "";
+        ClearPending(null);
+        if (Mode == DetectionMode.Focus) EvaluateFocus(immediate: false);
+        else if (_runningList.FirstOrDefault() is { } newest) Activate(newest, "auto-switch resumed");
+    }
+
     private void HookNameChange(uint pid)
     {
         if (_nameHook != IntPtr.Zero && _nameHookPid == pid) return;

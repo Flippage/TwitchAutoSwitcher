@@ -79,7 +79,12 @@
 3. **Choose how to detect:** on **Behaviour**, pick **A game launches** or **A game window is focused**.
 4. **Set your title (optional):** on **Stream Titles**, write a template and insert name pills.
 
-The **On Stream** panel in the sidebar always shows the category currently set on Twitch. When a mapped game is detected that isn't on stream, it appears underneath: **Switching in Ns** (with a timer bar) during the focus delay, or **Mapped game detected** while auto-switch is off. **Switch now** applies it immediately. If several mapped games are running, use the **‹ ›** arrows to flip between them and switch to any one.
+The **On Stream** panel in the sidebar always shows the category currently set on Twitch. When a mapped game is detected that isn't on stream, it appears underneath: **Switching in Ns** (with a timer bar) during the focus delay, or **Mapped game detected** while auto-switch is off. If several mapped games are running, use the **‹ ›** arrows to flip between them.
+
+**Switch now** works in two ways:
+
+- On a game that's **counting down**, it skips the timer. Auto-switch stays on.
+- On **any other game**, it switches to it and **pauses auto-switch**, so you stay on that category while you jump between windows. Click the amber **AUTO OFF** tag (or the Auto-switch toggle) to resume.
 
 ---
 
@@ -230,7 +235,7 @@ src/
 <details>
 <summary><b>The category doesn't switch</b></summary>
 
-- Make sure **Auto-switch** is on (sidebar). Manual mode pauses it.
+- Make sure **Auto-switch** is on (sidebar). Manual mode and a manual **Switch now** pause it. Click **AUTO OFF** to resume.
 - Check that the executable on the mapping matches the game you're running (path or file name).
 - In focus mode, the game must stay focused for the **focus delay** (Behaviour).
 - For emulators, check the **Match window title** text appears in the window's title (use **Use current title** to copy it).

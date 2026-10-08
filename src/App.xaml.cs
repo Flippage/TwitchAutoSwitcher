@@ -216,7 +216,7 @@ public partial class App : Application
         SaveConfig();
         _tray?.SetAutoChecked(on);
         Switcher.RaiseChanged();
-        if (on) Switcher.Reapply();
+        if (on) Watcher.Resync();
     }
 
     public static void SetStartup(bool on)

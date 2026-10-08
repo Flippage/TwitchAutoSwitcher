@@ -8,6 +8,16 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.3] - 2026-10-08
+
+### Changed
+- **Switch now** on a game that isn't counting down now pauses auto-switch, so you stay on that category until you resume. On a game that's counting down, it still just skips the timer.
+- Click the **AUTO OFF** tag in the On Stream panel to resume auto-switch.
+
+### Fixed
+- After a manual **Switch now**, auto-switch could stop reacting to the game you'd switched away from. Turning auto-switch back on now picks up from the window you're actually using.
+- The On Stream panel could overlap the Settings menu item on shorter windows. The box art now hides whenever space is tight.
+
 ## [1.1.2] - 2026-10-08
 
 ### Added

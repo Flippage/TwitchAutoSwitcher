@@ -36,7 +36,8 @@ public partial class MainWindow : Window
         App.Updater.Notice += downloaded => Dispatcher.InvokeAsync(() => QueueUpdateToast(downloaded));
         _countdown.Tick += (_, _) => UpdateCountdown();
         IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) ShowQueuedToast(); };
-        SizeChanged += (_, _) => UpdateArtVisibility();
+        SideDock.SizeChanged += (_, _) => UpdateArtVisibility();
+        NowCard.SizeChanged += (_, _) => UpdateArtVisibility();
 
         UpdateAccountChip();
         UpdateLiveBadge();
@@ -337,26 +338,64 @@ public partial class MainWindow : Window
         DetBarScale.ScaleX = Math.Clamp(elapsed / total, 0, 1);
     }
 
-    /// <summary>The box art hides on windows too short to fit everything (more room needed with the stack).</summary>
+    /// <summary>
+    /// The box art hides when the sidebar is too short to fit the menu, the On Stream panel and the status chips
+    /// without overlapping (measured, so it adapts to the stack, errors, DPI and window height).
+    /// </summary>
     private void UpdateArtVisibility()
     {
-        double needed = DetStack.Visibility == Visibility.Visible ? 890 : 790;
-        NowArtBox.Visibility = ActualHeight > 0 && ActualHeight < needed ? Visibility.Collapsed : Visibility.Visible;
+        if (_artCheckQueued) return;
+        _artCheckQueued = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+        {
+            _artCheckQueued = false;
+            if (SideDock.ActualHeight <= 0) return;
+            double menu = 0;
+            foreach (UIElement child in NavMenu.Children) menu += child.DesiredSize.Height;
+            double used = SideHeader.DesiredSize.Height + AccountChip.DesiredSize.Height + LiveBadge.DesiredSize.Height
+                        + NowCard.DesiredSize.Height + menu;
+            double free = SideDock.ActualHeight - used - 8;      // keep a small gap above the panel
+            const double artSpace = 112 + 10;
+            if (NowArtBox.Visibility == Visibility.Visible && free < 0)
+                NowArtBox.Visibility = Visibility.Collapsed;
+            else if (NowArtBox.Visibility != Visibility.Visible && free >= artSpace)
+                NowArtBox.Visibility = Visibility.Visible;
+        }));
     }
+    private bool _artCheckQueued;
 
+    /// <summary>
+    /// Counting down → skip the timer (auto-switch stays on).
+    /// Any other game → switch to it and pause auto-switch, so it stays put until you resume (AUTO OFF tag or toggle).
+    /// </summary>
     private async void SwitchNow_Click(object sender, RoutedEventArgs e)
     {
         if (_stack.Count == 0) return;
         var target = _stack[Math.Clamp(_stackIndex, 0, _stack.Count - 1)];
-        Log.Info("ui", $"Switch now: {target.Exe.FileName} → {target.Category.Name}");
-        if (Same(App.Watcher.Pending, target))
+        bool isPending = Same(App.Watcher.Pending, target);
+        if (isPending && App.Config.AutoSwitch)
         {
-            App.Watcher.ActivatePendingNow();          // auto-switch on: the normal switch path applies it
-            if (App.Config.AutoSwitch) return;
+            Log.Info("ui", $"Switch now (skip timer): {target.Exe.FileName} → {target.Category.Name}");
+            App.Watcher.ActivatePendingNow();          // the normal auto-switch path applies it
+            return;
         }
+        if (App.Config.AutoSwitch)
+        {
+            Log.Info("ui", "Auto-switch paused by a manual Switch now");
+            App.SetAutoSwitch(false);
+        }
+        Log.Info("ui", $"Switch now (manual): {target.Exe.FileName} → {target.Category.Name}");
+        if (isPending) App.Watcher.ClearPendingNow();
         DetBtn.IsEnabled = false;
-        await App.Switcher.SwitchNowAsync(target);    // anything else: apply this game now
+        await App.Switcher.SwitchNowAsync(target);
         DetBtn.IsEnabled = true;
+    }
+
+    private void AutoOffTag_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        Log.Info("ui", "Auto-switch resumed from the AUTO OFF tag");
+        App.SetAutoSwitch(true);
+        e.Handled = true;
     }
 
     private string? _liveArtId;

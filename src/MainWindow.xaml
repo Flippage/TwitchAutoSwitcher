@@ -17,8 +17,8 @@
 
         <!-- Sidebar -->
         <Border Background="{StaticResource SideBrush}">
-            <DockPanel Margin="0,24,0,16">
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="24,0,24,24">
+            <DockPanel x:Name="SideDock" Margin="0,24,0,16">
+                <StackPanel x:Name="SideHeader" DockPanel.Dock="Top" Orientation="Horizontal" Margin="24,0,24,24">
                     <Border Width="32" Height="32" CornerRadius="8" Background="{StaticResource AccentBrush}">
                         <Viewbox Width="18" Height="18">
                             <Path Style="{StaticResource Icon}" Data="{StaticResource IconSwitch}" Stroke="Black" StrokeThickness="2.4"/>
@@ -28,7 +28,7 @@
                 </StackPanel>
 
                 <!-- Account chip -->
-                <Border DockPanel.Dock="Bottom" Margin="16,0" Padding="12" CornerRadius="10" Background="#141414">
+                <Border x:Name="AccountChip" DockPanel.Dock="Bottom" Margin="16,0" Padding="12" CornerRadius="10" Background="#141414">
                     <DockPanel>
                         <Border x:Name="Avatar" Width="32" Height="32" CornerRadius="16" Background="#3A3A3A" DockPanel.Dock="Left">
                             <TextBlock x:Name="AvatarLetter" Text="?" FontWeight="Bold" FontSize="13"
@@ -60,8 +60,20 @@
                     <StackPanel>
                         <DockPanel Margin="0,0,0,8">
                             <Border x:Name="AutoOffTag" DockPanel.Dock="Right" CornerRadius="6" Padding="6,1,6,2"
-                                    Background="{StaticResource WarnBgBrush}" Visibility="Collapsed" VerticalAlignment="Center">
-                                <TextBlock Text="AUTO OFF" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource WarnBrush}"/>
+                                    Background="{StaticResource WarnBgBrush}" BorderBrush="Transparent" BorderThickness="1"
+                                    Visibility="Collapsed" VerticalAlignment="Center" Cursor="Hand"
+                                    ToolTip="Auto-switch is paused. Click to resume."
+                                    MouseLeftButtonUp="AutoOffTag_Click">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="BorderBrush" Value="{StaticResource WarnLineBrush}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock x:Name="AutoOffText" Text="AUTO OFF" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource WarnBrush}"/>
                             </Border>
                             <TextBlock x:Name="NowLabel" Text="ON STREAM" Style="{StaticResource Caps}" FontSize="10.5" VerticalAlignment="Center"/>
                         </DockPanel>
@@ -152,7 +164,7 @@
                 </Border>
 
                 <!-- Menu: least-used last -->
-                <StackPanel>
+                <StackPanel x:Name="NavMenu" VerticalAlignment="Top">
                     <RadioButton x:Name="NavMappings" Style="{StaticResource NavButton}" Content="Mappings" Tag="{StaticResource IconHome}" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavTitles" Style="{StaticResource NavButton}" Content="Stream Titles" Tag="{StaticResource IconTitles}" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavManual" Style="{StaticResource NavButton}" Content="Manual" Tag="{StaticResource IconPencil}" Checked="Nav_Checked"/>
