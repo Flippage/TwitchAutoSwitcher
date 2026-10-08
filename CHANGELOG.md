@@ -8,6 +8,11 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.6] - 2026-10-08
+
+### Changed
+- Removing a category now asks for confirmation in an in-app dialog that matches the rest of AutoSwitcher, showing the category's box art and executables, instead of a Windows message box. Esc or clicking outside cancels; Enter confirms.
+
 ## [1.1.5] - 2026-10-08
 
 ### Fixed

@@ -142,6 +142,7 @@ public partial class App : Application
             await Task.Delay(800);
             window.SelfTestVisitPages();
             await window.SelfTestFlipStackAsync();
+            await window.SelfTestConfirmAsync();
             Watcher.Start(DetectionMode.Focus);
             await Task.Delay(1500);                     // let the 1 s focus check run at least once
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);

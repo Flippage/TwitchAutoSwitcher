@@ -225,5 +225,53 @@
                 </Border>
             </Grid>
         </Border>
+        <!-- In-app confirmation dialog (replaces Windows message boxes) -->
+        <Grid x:Name="ConfirmLayer" Grid.ColumnSpan="2" Visibility="Collapsed" Opacity="0" KeyboardNavigation.TabNavigation="Cycle">
+            <Border Background="#B8000000" MouseLeftButtonDown="ConfirmBackdrop_MouseDown"/>
+            <Border x:Name="ConfirmCard" Width="440" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    CornerRadius="16" Background="#1A1A1A" BorderBrush="{StaticResource LineBrush}" BorderThickness="2" Padding="24"
+                    RenderTransformOrigin="0.5,0.5">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="10" Opacity="0.7" Color="Black"/>
+                </Border.Effect>
+                <Border.RenderTransform>
+                    <ScaleTransform x:Name="ConfirmScale" ScaleX="1" ScaleY="1"/>
+                </Border.RenderTransform>
+                <StackPanel>
+                    <DockPanel>
+                        <Border Width="40" Height="40" CornerRadius="20" Background="{StaticResource DangerBgBrush}"
+                                BorderBrush="{StaticResource DangerLineBrush}" BorderThickness="1" DockPanel.Dock="Left" VerticalAlignment="Top">
+                            <Viewbox Width="18" Height="18">
+                                <Path Style="{StaticResource Icon}" Data="{StaticResource IconTrash}" Stroke="{StaticResource DangerBrush}" StrokeThickness="2.2"/>
+                            </Viewbox>
+                        </Border>
+                        <StackPanel Margin="14,0,0,0">
+                            <TextBlock x:Name="ConfirmTitle" FontSize="17" FontWeight="Bold" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="ConfirmMessage" FontSize="13" Foreground="{StaticResource Text2Brush}"
+                                       TextWrapping="Wrap" Margin="0,6,0,0" LineHeight="19"/>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <Border x:Name="ConfirmItem" Margin="0,18,0,0" Padding="10" CornerRadius="10" Background="#121212"
+                            BorderBrush="#262626" BorderThickness="1" Visibility="Collapsed">
+                        <DockPanel>
+                            <Border x:Name="ConfirmArt" Width="36" Height="48" CornerRadius="4" Background="#1F1F1F" DockPanel.Dock="Left"/>
+                            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="ConfirmItemName" FontSize="13.5" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="ConfirmItemSub" FontSize="12" Foreground="{StaticResource SubBrush}" Margin="0,2,0,0"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
+                        <Button x:Name="ConfirmNo" Content="Cancel" Style="{StaticResource OutlineButton}" Height="40" MinWidth="104"
+                                IsCancel="True" Click="ConfirmNo_Click"/>
+                        <Button x:Name="ConfirmYes" Content="Remove" Style="{StaticResource DangerButton}" Height="40" MinWidth="104"
+                                Margin="10,0,0,0" IsDefault="True" Click="ConfirmYes_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

@@ -24,6 +24,8 @@
     <SolidColorBrush x:Key="WarnLineBrush" Color="#5A4214"/>
     <SolidColorBrush x:Key="WarnTextBrush" Color="#FDE7B0"/>
     <SolidColorBrush x:Key="DangerBrush" Color="#F87171"/>
+    <SolidColorBrush x:Key="DangerBgBrush" Color="#2A1212"/>
+    <SolidColorBrush x:Key="DangerLineBrush" Color="#5A2424"/>
     <SolidColorBrush x:Key="BlackBrush" Color="#000000"/>
 
     <!-- ============ Icons (24x24 stroke paths) ============ -->
@@ -139,6 +141,11 @@
         <Setter Property="FontWeight" Value="Bold"/>
     </Style>
     <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource BtnBase}"/>
+    <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource BtnBase}">
+        <Setter Property="Background" Value="{StaticResource DangerBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource BlackBrush}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
     <Style x:Key="OutlineButton" TargetType="Button" BasedOn="{StaticResource BtnBase}">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>

@@ -531,6 +531,66 @@ public partial class MainWindow : Window
         UpdateLayout();
     }
 
+    // ------------------------------------------------------------------ in-app confirmation
+
+    private System.Threading.Tasks.TaskCompletionSource<bool>? _confirm;
+    private IInputElement? _confirmReturnFocus;
+
+    /// <summary>
+    /// App-styled confirmation over the whole window. Esc / Cancel / clicking outside → false; Enter / confirm → true.
+    /// Optionally shows the item being acted on (box art, name, detail line).
+    /// </summary>
+    public System.Threading.Tasks.Task<bool> ConfirmAsync(string title, string message, string confirmText,
+        string? itemName = null, string? itemSub = null, string? artUrl = null)
+    {
+        _confirm?.TrySetResult(false);
+        _confirm = new System.Threading.Tasks.TaskCompletionSource<bool>();
+        ConfirmTitle.Text = title;
+        ConfirmMessage.Text = message;
+        ConfirmYes.Content = confirmText;
+        ConfirmItem.Visibility = itemName == null ? Visibility.Collapsed : Visibility.Visible;
+        ConfirmItemName.Text = itemName ?? "";
+        ConfirmItemSub.Text = itemSub ?? "";
+        ConfirmItemSub.Visibility = string.IsNullOrEmpty(itemSub) ? Visibility.Collapsed : Visibility.Visible;
+        Art.SetUrl(ConfirmArt, artUrl);
+        ConfirmArt.Visibility = string.IsNullOrEmpty(artUrl) ? Visibility.Collapsed : Visibility.Visible;
+
+        _confirmReturnFocus = System.Windows.Input.Keyboard.FocusedElement;
+        ConfirmLayer.Visibility = Visibility.Visible;
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var dur = TimeSpan.FromMilliseconds(140);
+        ConfirmLayer.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, dur) { EasingFunction = ease });
+        ConfirmScale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.96, 1, dur) { EasingFunction = ease });
+        ConfirmScale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.96, 1, dur) { EasingFunction = ease });
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => ConfirmNo.Focus()));
+        return _confirm.Task;
+    }
+
+    private void CloseConfirm(bool result)
+    {
+        if (_confirm == null) return;
+        var tcs = _confirm;
+        _confirm = null;
+        var fade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(110));
+        fade.Completed += (_, _) => { if (_confirm == null) ConfirmLayer.Visibility = Visibility.Collapsed; };
+        ConfirmLayer.BeginAnimation(OpacityProperty, fade);
+        (_confirmReturnFocus as UIElement)?.Focus();
+        tcs.TrySetResult(result);
+    }
+
+    private void ConfirmYes_Click(object sender, RoutedEventArgs e) => CloseConfirm(true);
+    private void ConfirmNo_Click(object sender, RoutedEventArgs e) => CloseConfirm(false);
+    private void ConfirmBackdrop_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e) => CloseConfirm(false);
+
+    /// <summary>Self-test: open the dialog, answer it, and check the result comes back.</summary>
+    public async System.Threading.Tasks.Task SelfTestConfirmAsync()
+    {
+        var task = ConfirmAsync("Remove category?", "Self-test", "Remove", "Self-test Game", "1 executable", null);
+        await System.Threading.Tasks.Task.Delay(300);
+        CloseConfirm(true);
+        if (!await task) throw new InvalidOperationException("Confirm dialog did not return the confirm result.");
+    }
+
     // ------------------------------------------------------------------ window
 
     private void OnClosing(object? sender, CancelEventArgs e)

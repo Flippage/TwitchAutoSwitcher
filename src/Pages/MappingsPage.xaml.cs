@@ -87,13 +87,19 @@ public partial class MappingsPage : UserControl
             (Window.GetWindow(this) as MainWindow)?.OpenEditor(c);
     }
 
-    private void Delete_Click(object sender, RoutedEventArgs e)
+    private async void Delete_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { CommandParameter: CategoryMapping c }) return;
-        var answer = MessageBox.Show(Window.GetWindow(this)!,
-            $"Remove \"{c.Name}\" and its {c.Executables.Count} executable(s)?", "Remove category",
-            MessageBoxButton.YesNo, MessageBoxImage.Question);
-        if (answer != MessageBoxResult.Yes) return;
+        if (Window.GetWindow(this) is not MainWindow main) return;
+        int n = c.Executables.Count;
+        string exes = n == 0 ? "No executables"
+                    : n <= 3 ? string.Join(", ", c.Executables.Select(x => x.FileName))
+                    : $"{n} executables";
+        bool ok = await main.ConfirmAsync(
+            "Remove category?",
+            "AutoSwitcher will stop switching to this category. Your stream's current category and title aren't changed.",
+            "Remove", c.Name, exes, c.BoxArtUrl);
+        if (!ok) return;
         App.Config.Categories.Remove(c);
         App.SaveConfig();
         App.Watcher.UpdateMappings(App.Config.Categories);
