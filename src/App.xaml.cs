@@ -68,6 +68,7 @@ public partial class App : Application
 
     private void StartApp(StartupEventArgs e)
     {
+        ToggleReady.Register();
         Toasts.Init();   // AppUserModelID first, so the taskbar and notifications agree on who we are
         Config = ConfigStore.Load();
 

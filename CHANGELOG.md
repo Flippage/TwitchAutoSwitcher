@@ -8,6 +8,11 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.8] - 2026-10-08
+
+### Fixed
+- Turning one mapping on or off no longer makes every other toggle on **Mappings** flick off and back on. Toggles that appear already on (for example after editing a category) now show their state straight away instead of animating.
+
 ## [1.1.7] - 2026-10-08
 
 ### Added

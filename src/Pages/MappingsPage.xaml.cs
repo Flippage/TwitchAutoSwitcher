@@ -9,8 +9,16 @@ using System.Windows.Threading;
 
 namespace AutoSwitcher;
 
-public sealed class CategoryRow
+public sealed class CategoryRow : System.ComponentModel.INotifyPropertyChanged
 {
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+    /// <summary>Re-read Enabled and everything derived from it, without rebuilding the row.</summary>
+    public void NotifyEnabled()
+    {
+        foreach (var n in new[] { nameof(Enabled), nameof(ContentOpacity), nameof(PausedTag), nameof(ToggleTip) })
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(n));
+    }
+
     public required CategoryMapping Category { get; init; }
     public required List<ExeChip> Chips { get; init; }
     public bool Enabled => Category.Enabled;
@@ -99,7 +107,7 @@ public partial class MappingsPage : UserControl
         Log.Info("ui", $"Mapping {(c.Enabled ? "enabled" : "paused")}: {c.Name}");
         App.SaveConfig();
         App.Watcher.UpdateMappings(App.Config.Categories);
-        Refresh();
+        (box.DataContext as CategoryRow)?.NotifyEnabled();   // update just this row; the others stay untouched
     }
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
