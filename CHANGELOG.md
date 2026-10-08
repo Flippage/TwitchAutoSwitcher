@@ -8,6 +8,11 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.4] - 2026-10-08
+
+### Changed
+- On shorter windows, the On Stream box art now shrinks to fit instead of disappearing. It only hides when there's room for less than half its size.
+
 ## [1.1.3] - 2026-10-08
 
 ### Changed

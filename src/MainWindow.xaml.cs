@@ -339,8 +339,9 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// The box art hides when the sidebar is too short to fit the menu, the On Stream panel and the status chips
-    /// without overlapping (measured, so it adapts to the stack, errors, DPI and window height).
+    /// Fit the sidebar without overlapping the menu: the box art shrinks (keeping its 3:4 shape) to whatever space
+    /// is left, from full size (84×112) down to half; only below half size does it hide. Measured, so it adapts to
+    /// the detected-game stack, errors, DPI and window height.
     /// </summary>
     private void UpdateArtVisibility()
     {
@@ -350,16 +351,20 @@ public partial class MainWindow : Window
         {
             _artCheckQueued = false;
             if (SideDock.ActualHeight <= 0) return;
+            const double fullH = 112, minH = 56, gap = 10;
             double menu = 0;
             foreach (UIElement child in NavMenu.Children) menu += child.DesiredSize.Height;
             double used = SideHeader.DesiredSize.Height + AccountChip.DesiredSize.Height + LiveBadge.DesiredSize.Height
                         + NowCard.DesiredSize.Height + menu;
-            double free = SideDock.ActualHeight - used - 8;      // keep a small gap above the panel
-            const double artSpace = 112 + 10;
-            if (NowArtBox.Visibility == Visibility.Visible && free < 0)
-                NowArtBox.Visibility = Visibility.Collapsed;
-            else if (NowArtBox.Visibility != Visibility.Visible && free >= artSpace)
+            double artNow = NowArtBox.Visibility == Visibility.Visible ? NowArt.Height + gap : 0;
+            double room = SideDock.ActualHeight - (used - artNow) - 8;   // space the art could use, keeping a gap above the panel
+            double h = Math.Floor(Math.Min(fullH, room - gap));
+            if (h >= minH)
+            {
+                if (Math.Abs(NowArt.Height - h) >= 1) { NowArt.Height = h; NowArt.Width = Math.Round(h * 0.75); }
                 NowArtBox.Visibility = Visibility.Visible;
+            }
+            else NowArtBox.Visibility = Visibility.Collapsed;
         }));
     }
     private bool _artCheckQueued;
