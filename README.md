@@ -206,15 +206,6 @@ build.cmd          :: small EXE  → dist\AutoSwitcher.exe            (needs .NE
 build.cmd full     :: standalone → dist-standalone\AutoSwitcher.exe
 ```
 
-**CI:** every push builds both EXEs in GitHub Actions; download them from the run's **Artifacts**.
-
-**Publishing a release:**
-
-1. Add a section for the new version at the top of [`CHANGELOG.md`](CHANGELOG.md) (Added / Changed / Fixed / Removed) and commit it.
-2. Go to **Actions → Build AutoSwitcher → Run workflow**, enter the same version (e.g. `1.2.0`), and run it.
-
-The workflow builds both versions, launches them to check they start, then tags and publishes a GitHub Release with the `.exe` and `.zip`. The release notes are that version's CHANGELOG section. If there isn't one, it lists the commit messages since the last release.
-
 <details>
 <summary>Project layout</summary>
 
