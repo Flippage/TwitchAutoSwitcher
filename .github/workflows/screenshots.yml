@@ -32,6 +32,15 @@ jobs:
       - name: Publish
         run: dotnet publish src/AutoSwitcher.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=none -p:Version=${{ steps.ver.outputs.version }} -o dist
 
+      - name: Larger virtual screen (the default ~1024×768 is smaller than the app window)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          try { Set-DisplayResolution -Width 1920 -Height 1080 -Force -ErrorAction Stop } catch { Write-Host "::warning::Set-DisplayResolution failed: $_" }
+          Add-Type -AssemblyName System.Windows.Forms
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          Write-Host "::notice title=Screen::$($b.Width)x$($b.Height)"
+
       - name: Capture screenshots
         shell: pwsh
         run: |

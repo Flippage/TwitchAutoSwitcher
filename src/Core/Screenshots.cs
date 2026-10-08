@@ -137,6 +137,8 @@ public static class Screenshots
             w.Width = 1100; w.Height = 920;
             w.Left = 0; w.Top = 0;
             await Task.Delay(4000);                       // box art downloads + first layout
+            File.AppendAllText(Path.Combine(Path.GetTempPath(), "autoswitcher-screenshots.log"),
+                $"window client {((FrameworkElement)w.Content).ActualWidth}x{((FrameworkElement)w.Content).ActualHeight}{Environment.NewLine}");
 
             async Task Shot(Action show, string name, FrameworkElement? element = null, double pad = 0)
             {
