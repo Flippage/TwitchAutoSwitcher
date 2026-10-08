@@ -291,6 +291,26 @@ public sealed class GameWatcher : IDisposable
         if (p != null) Activate(p, "Switch now");
     }
 
+    /// <summary>Screenshot mode: scan running processes once (focus mode, no hooks, timers or switching).</summary>
+    public void StartDemo()
+    {
+        Stop();
+        Mode = DetectionMode.Focus;
+        _running = true;
+        _known.Clear(); _firstSeen.Clear(); _titleWatch.Clear();
+        _primed = false;
+        Poll();
+    }
+
+    /// <summary>Screenshot mode: show a switch counting down (never fires).</summary>
+    public void DemoPending(GameHit hit, TimeSpan elapsed)
+    {
+        _pendingTimer.Stop();
+        _pending = hit;
+        PendingSinceUtc = DateTime.UtcNow - elapsed;
+        PendingChanged?.Invoke();
+    }
+
     /// <summary>Drop a pending switch without applying it (a manual switch replaced it).</summary>
     public void ClearPendingNow() => ClearPending("manual switch");
 

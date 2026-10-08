@@ -39,6 +39,8 @@ public partial class App : Application
 
         base.OnStartup(e);
         _selfTest = e.Args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+        int si = Array.FindIndex(e.Args, a => a.Equals("--screenshots", StringComparison.OrdinalIgnoreCase));
+        if (si >= 0) _screenshotDir = System.IO.Path.GetFullPath(si + 1 < e.Args.Length ? e.Args[si + 1] : "screenshots");
         DispatcherUnhandledException += (_, args) =>
         {
             args.Handled = true;   // never crash the tray app over a UI glitch…
@@ -69,10 +71,10 @@ public partial class App : Application
     private void StartApp(StartupEventArgs e)
     {
         Toasts.Init();   // AppUserModelID first, so the taskbar and notifications agree on who we are
-        Config = ConfigStore.Load();
+        Config = _screenshotDir != null ? Screenshots.BuildConfig(_screenshotDir) : ConfigStore.Load();
 
         // "Update automatically on next launch": swap in the downloaded version before any UI appears.
-        if (!_selfTest && Updater.TryInstallOnLaunch(Config))
+        if (!_selfTest && _screenshotDir == null && Updater.TryInstallOnLaunch(Config))
         {
             RestartInto(Environment.ProcessPath!, string.Join(" ", e.Args.Select(a => $"\"{a}\"")));
             return;
@@ -91,18 +93,24 @@ public partial class App : Application
 
         var window = new MainWindow();
         MainWindow = window;
-        if (_selfTest || !e.Args.Contains("--minimized", StringComparer.OrdinalIgnoreCase)) window.Show();
+        if (_selfTest || _screenshotDir != null || !e.Args.Contains("--minimized", StringComparer.OrdinalIgnoreCase)) window.Show();
 
         ThreadPool.RegisterWaitForSingleObject(_showSignal!,
             (_, _) => Dispatcher.InvokeAsync(ShowMain), null, Timeout.Infinite, executeOnlyOnce: false);
 
         if (_selfTest) { _ = RunSelfTestAsync(window); return; }
+        if (_screenshotDir != null)
+        {
+            _ = Dispatcher.InvokeAsync(async () => { await Screenshots.RunAsync(window, _screenshotDir); SelfTestExit(0); });
+            return;
+        }
         _ = InitAsync();
     }
 
     // ------------------------------------------------------------------ diagnostics
 
     private static bool _selfTest;
+    private static string? _screenshotDir;
     private static Exception? _selfTestError;
     public static string ErrorLogPath => System.IO.Path.Combine(ConfigStore.Dir, "error.log");
 

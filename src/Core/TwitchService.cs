@@ -34,6 +34,16 @@ public sealed class TwitchService
     public const string ClientId = "q27xh0as8wnpw5ei4ckwgqzxlgjakm";
     public TokenSet? Tokens { get; private set; }
     public bool IsSignedIn => Tokens != null;
+    /// <summary>Screenshot mode: looks signed in, never calls Twitch.</summary>
+    public bool Demo { get; private set; }
+
+    public void UseDemo(string displayName)
+    {
+        Demo = true;
+        Tokens = new TokenSet { AccessToken = "demo", DisplayName = displayName, Login = displayName.ToLowerInvariant(),
+                                ExpiresAtUtc = DateTime.UtcNow.AddDays(30) };
+        AuthChanged?.Invoke();
+    }
     public event Action? AuthChanged;
 
     public TwitchService()
@@ -115,6 +125,7 @@ public sealed class TwitchService
     /// <summary>Twitch asks apps to validate tokens hourly.</summary>
     public async Task ValidateAsync()
     {
+        if (Demo) return;
         var t = Tokens;
         if (t == null) return;
         try
@@ -129,6 +140,7 @@ public sealed class TwitchService
 
     private async Task<bool> RefreshAsync(bool force = false)
     {
+        if (Demo) return true;
         var before = Tokens;
         if (before == null) return false;
         await _refreshLock.WaitAsync();
@@ -283,7 +295,7 @@ public sealed class TwitchService
     /// <summary>Sends a Helix request; on 401 refreshes once and retries.</summary>
     private async Task<HttpResponseMessage?> ApiAsync(HttpMethod method, string path, string? json = null, CancellationToken ct = default)
     {
-        if (Tokens == null) return null;
+        if (Tokens == null || Demo) return null;
         if (Tokens.ExpiresAtUtc < DateTime.UtcNow.AddMinutes(1)) await RefreshAsync();
 
         for (int attempt = 0; attempt < 2; attempt++)

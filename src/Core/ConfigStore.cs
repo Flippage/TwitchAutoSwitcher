@@ -35,8 +35,12 @@ public static class ConfigStore
         return new AppConfig();
     }
 
+    /// <summary>Screenshot (demo) mode: never write the user's settings or tokens.</summary>
+    public static bool ReadOnly { get; set; }
+
     public static void Save(AppConfig config)
     {
+        if (ReadOnly) return;
         Directory.CreateDirectory(Dir);
         string tmp = ConfigPath + ".tmp";
         File.WriteAllText(tmp, JsonSerializer.Serialize(config, Opts));
@@ -56,6 +60,7 @@ public static class ConfigStore
 
     public static void SaveTokens(TokenSet? tokens)
     {
+        if (ReadOnly) return;
         try
         {
             if (tokens == null)

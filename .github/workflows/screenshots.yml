@@ -1,0 +1,58 @@
+name: README screenshots
+
+# Run from Actions → README screenshots → Run workflow.
+# Builds the app, launches it in demo mode (sample games, a demo channel, nothing personal),
+# captures every page and commits the images to docs/screenshots.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Version (latest release, so Settings shows "up to date")
+        id: ver
+        shell: pwsh
+        run: |
+          $tag = git describe --tags --abbrev=0 2>$null
+          if (-not $tag) { $tag = "v1.0.0" }
+          "version=$($tag.TrimStart('v'))" >> $env:GITHUB_OUTPUT
+
+      - name: Publish
+        run: dotnet publish src/AutoSwitcher.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=none -p:Version=${{ steps.ver.outputs.version }} -o dist
+
+      - name: Capture screenshots
+        shell: pwsh
+        run: |
+          $out = Join-Path $PWD "docs/screenshots"
+          New-Item -ItemType Directory -Force $out | Out-Null
+          $p = Start-Process -FilePath "dist/AutoSwitcher.exe" -ArgumentList "--screenshots", "`"$out`"" -PassThru
+          if (-not $p.WaitForExit(180000)) { $p.Kill(); throw "Screenshot run timed out" }
+          $log = Join-Path $env:TEMP "autoswitcher-screenshots.log"
+          if (Test-Path $log) { Get-Content $log | ForEach-Object { Write-Host "::notice title=Box art::$_" } }
+          $err = Join-Path $env:APPDATA "AutoSwitcher/error.log"
+          if (Test-Path $err) { $t = Get-Content $err -Raw; Write-Host ("::error title=Screenshot error::" + ($t -replace "`r","" -replace "`n","%0A")); throw "Screenshot run failed" }
+          Get-ChildItem $out | ForEach-Object { Write-Host "::notice title=Captured::$($_.Name) $([math]::Round($_.Length/1KB)) KB" }
+          if ((Get-ChildItem $out -Filter *.png).Count -lt 7) { throw "Expected 7 screenshots" }
+
+      - name: Commit screenshots
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) { Write-Host "No changes"; exit 0 }
+          git commit -m "Update README screenshots [skip ci]"
+          git push

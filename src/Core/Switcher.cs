@@ -27,6 +27,13 @@ public sealed class Switcher
     public int Viewers { get; private set; }
     public GameHit? Current { get; private set; }
 
+    /// <summary>Screenshot mode: pretend the channel is live with this category.</summary>
+    public void SetDemo(ChannelInfo live, bool isLive, int viewers)
+    {
+        Live = live; IsLive = isLive; Viewers = viewers; LastError = null;
+        Changed?.Invoke();
+    }
+
     /// <summary>Forget the current game if it belongs to a mapping that was paused or removed.</summary>
     public void ForgetIfInactive(System.Collections.Generic.IList<CategoryMapping> categories)
     {
