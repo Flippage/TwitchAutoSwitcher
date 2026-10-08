@@ -81,6 +81,9 @@ public partial class ManualPage : UserControl
     {
         if (_artForGameId == gameId) return;
         _artForGameId = gameId;
+        // A mapped category already has its box art: no need to ask Twitch.
+        var mapped = App.Config.Categories.Find(c => c.Id == gameId && !string.IsNullOrEmpty(c.BoxArtUrl));
+        if (mapped != null) { Art.SetUrl(LiveArt, mapped.BoxArtUrl); return; }
         try
         {
             var game = await App.Twitch.GetGameAsync(gameId);

@@ -15,6 +15,10 @@
   <img alt="WPF" src="https://img.shields.io/badge/UI-WPF-22C7E6">
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/mappings.png" alt="AutoSwitcher: game mappings, with the On Stream panel counting down to switch to a newly focused game" width="900">
+</p>
+
 ---
 
 ## Contents
@@ -23,6 +27,7 @@
 - [Download & install](#download--install)
 - [Getting started](#getting-started)
 - [Stream titles](#stream-titles)
+- [Manual mode](#manual-mode)
 - [Emulators & window-title matching](#emulators--window-title-matching)
 - [Detection modes](#detection-modes)
 - [Notifications](#notifications)
@@ -80,12 +85,22 @@
 3. **Choose how to detect:** on **Behaviour**, pick **A game launches** or **A game window is focused**.
 4. **Set your title (optional):** on **Stream Titles**, write a template and insert name pills.
 
+<p align="center">
+  <img src="docs/screenshots/edit-category.png" alt="Editing a category: the Twitch category with box art, and an executable with its Game Executable Name and Custom Name" width="820">
+</p>
+
+### The On Stream panel
+
+<img src="docs/screenshots/on-stream-panel.png" alt="On Stream panel: the category on Twitch, and a detected game counting down to switch" width="216" align="right">
+
 The **On Stream** panel in the sidebar always shows the category currently set on Twitch. When a mapped game is detected that isn't on stream, it appears underneath: **Switching in Ns** (with a timer bar) during the focus delay, or **Mapped game detected** while auto-switch is off. If several mapped games are running, use the **‹ ›** arrows to flip between them.
 
 **Switch now** works in two ways:
 
 - On a game that's **counting down**, it skips the timer. Auto-switch stays on.
 - On **any other game**, it switches to it and **pauses auto-switch**, so you stay on that category while you jump between windows. Click the amber **AUTO OFF** tag (or the Auto-switch toggle) to resume.
+
+<br clear="right">
 
 ---
 
@@ -107,6 +122,23 @@ AUS 18+ | Multiworld Day 2 | Now playing: [Custom Name] | !discord
 - The **character counter** counts the *filled-in* title. Anything past Twitch's 140-character limit is highlighted in red.
 - **Only real changes are sent.** Switching between two executables of the same category doesn't touch your title unless its filled-in text actually changes.
 - **Apply now** pushes the title immediately. **Recent Titles** keeps your current and previous titles one click away.
+
+<p align="center">
+  <img src="docs/screenshots/stream-titles.png" alt="Stream Titles: a template with a Custom Name pill, the live title preview and recent titles" width="820">
+</p>
+
+---
+
+## Manual mode
+
+Need to set something by hand? **Manual** lets you pick any Twitch category and write a title directly, with a pill for each mapped game and your recent titles one click away.
+
+- **Apply to Twitch** sets the category and title. **Update title only** leaves the category alone.
+- Applying anything here **pauses auto-switch**, so the next game you focus doesn't overwrite your choice. Turn **Auto-switch** back on in the sidebar when you're ready.
+
+<p align="center">
+  <img src="docs/screenshots/manual.png" alt="Manual stream info: current title, category search, title editor with game pills and recent titles" width="820">
+</p>
 
 ---
 
@@ -133,6 +165,10 @@ Emulators and launchers often run many games from one executable. Turn on **Matc
 |---|---|---|
 | **A game window is focused** | Multiworlds with several games open | Switches when you click into a mapped game. A configurable **focus delay** (default 8 s) prevents switching while you click back and forth. |
 | **A game launches** | One game at a time | Switches when a mapped game starts. When it closes, it switches to another running mapped game, or to your **fallback category** (optional). |
+
+<p align="center">
+  <img src="docs/screenshots/behaviour.png" alt="Behaviour: detection mode, focus delay, title, notification and fallback options" width="820">
+</p>
 
 ---
 
@@ -166,6 +202,10 @@ Options in **Settings → Updates**:
 | **Update automatically on next launch** | Installs a downloaded update the next time AutoSwitcher starts, including **Start with Windows**. Requires the option above. |
 
 AutoSwitcher never installs an update or restarts itself without one of these: you click **Update now**, or you've turned on install on next launch.
+
+<p align="center">
+  <img src="docs/screenshots/settings.png" alt="Settings: Twitch account, update status and options, app options" width="820">
+</p>
 
 ---
 
