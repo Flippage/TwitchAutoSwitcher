@@ -562,7 +562,7 @@ public partial class MainWindow : Window
         ConfirmLayer.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, dur) { EasingFunction = ease });
         ConfirmScale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.96, 1, dur) { EasingFunction = ease });
         ConfirmScale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.96, 1, dur) { EasingFunction = ease });
-        Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => ConfirmCard.Focus())   // no button pre-focused: Enter = confirm, Esc = cancel);
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() => ConfirmCard.Focus()));   // no button pre-focused: Enter = confirm, Esc = cancel
         return _confirm.Task;
     }
 
