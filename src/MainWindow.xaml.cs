@@ -36,6 +36,8 @@ public partial class MainWindow : Window
         App.Updater.Changed += () => Dispatcher.InvokeAsync(UpdateUpdateBadge);
         App.Updater.Notice += downloaded => Dispatcher.InvokeAsync(() => QueueUpdateToast(downloaded));
         _countdown.Tick += (_, _) => UpdateCountdown();
+        DetBtn.IsEnabledChanged += (_, _) => DetBtnText.Opacity = DetBtn.IsEnabled ? 1 : 0.4;
+        DetBtn.IsMouseDirectlyOverChanged += (_, _) => DetBtnText.Opacity = DetBtn.IsEnabled ? (DetBtn.IsMouseOver ? 0.85 : 1) : 0.4;
         IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) ShowQueuedToast(); };
         SideDock.SizeChanged += (_, _) => UpdateArtVisibility();
         NowCard.SizeChanged += (_, _) => UpdateArtVisibility();
@@ -270,6 +272,7 @@ public partial class MainWindow : Window
         DetBack1.BorderBrush = DetBack2.BorderBrush = isPending ? DetCyanBackLine : DetAmberBackLine;
         DetLabel.Foreground = fg;
         foreach (var b in new[] { DetBtn, DetPrev, DetNext }) { b.Foreground = btnFg; b.BorderBrush = line; }
+        DetBtnText.Foreground = btnFg;
 
         if (isPending)
         {

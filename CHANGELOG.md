@@ -8,6 +8,11 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.12] - 2026-10-08
+
+### Fixed
+- The **Switch now** label no longer jitters while the button narrows or widens for the ‹ › arrows.
+
 ## [1.1.11] - 2026-10-08
 
 ### Fixed

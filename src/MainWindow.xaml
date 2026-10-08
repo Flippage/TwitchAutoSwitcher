@@ -134,9 +134,7 @@
                                             </Viewbox>
                                         </Button>
                                         <Button x:Name="DetBtn" Grid.Column="1" Style="{StaticResource PillButton}" Height="26" Padding="4,0"
-                                                FontWeight="Bold" Click="SwitchNow_Click">
-                                            <TextBlock Text="Switch now" TextTrimming="CharacterEllipsis"/>
-                                        </Button>
+                                                FontWeight="Bold" Click="SwitchNow_Click" AutomationProperties.Name="Switch now"/>
                                         <Button x:Name="DetNext" Grid.Column="2" Style="{StaticResource PillButton}" Width="0" Height="22" Padding="0"
                                                 Margin="0" Opacity="0" IsHitTestVisible="False" IsTabStop="False" ClipToBounds="True" ToolTip="Next game" Click="DetNext_Click">
                                             <Viewbox Width="9" Height="9">
@@ -144,6 +142,10 @@
                                                       Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                                             </Viewbox>
                                         </Button>
+                                        <!-- Label sits over the whole row (not inside the button), so it stays perfectly still
+                                             while the button narrows/widens for the ‹ › arrows. -->
+                                        <TextBlock x:Name="DetBtnText" Grid.ColumnSpan="3" Text="Switch now" FontSize="12" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
