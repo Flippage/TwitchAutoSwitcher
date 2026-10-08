@@ -19,6 +19,11 @@ namespace AutoSwitcher;
 /// </summary>
 public static class Screenshots
 {
+    /// <summary>Tidy demo paths for the editor screenshot (the build machine can write to C:\).</summary>
+    private static readonly string DemoRoot = Directory.Exists(@"C:\Games") || TryCreate(@"C:\Games") ? @"C:\Games"
+                                              : Path.Combine(Path.GetTempPath(), "AutoSwitcherDemo");
+    private static bool TryCreate(string d) { try { Directory.CreateDirectory(d); return true; } catch { return false; } }
+
     private const string ArtBase = "https://static-cdn.jtvnw.net/ttv-boxart/";
     private static readonly List<Process> Demo = new();
 
@@ -29,8 +34,8 @@ public static class Screenshots
     {
         new("11557", "The Legend of Zelda: Ocarina of Time", "soh.exe", "Ship of Harkinian", "Zelda OoT", Running: true, ArtIds: new[] { "11557" }),
         new("490147", "Hollow Knight", "hollow_knight.exe", "Hollow Knight", "", Running: true, ArtIds: new[] { "490147" }),
-        new("1424133580", "Neon White", "Neon White.exe", "Neon White", "", Running: false),
-        new("1665347569", "Metroid Prime Remastered", "emulator.exe", "Emulator", "Metroid Prime", Running: false, TitlePattern: "Metroid Prime*"),
+        new("2692", "Super Mario 64", "sm64.exe", "Super Mario 64", "SM64", Running: false, ArtIds: new[] { "2692" }),
+        new("1229", "Super Metroid", "emulator.exe", "Emulator", "Super Metroid", Running: false, TitlePattern: "Super Metroid*"),
         new("504461", "Celeste", "Celeste.exe", "Celeste", "", Running: false, Enabled: false, ArtIds: new[] { "504461" }),
     };
 
@@ -44,7 +49,7 @@ public static class Screenshots
         var art = Task.Run(() => ResolveArtAsync(log)).GetAwaiter().GetResult();
         File.WriteAllLines(Path.Combine(Path.GetTempPath(), "autoswitcher-screenshots.log"), log);
 
-        string root = Path.Combine(Path.GetTempPath(), "AutoSwitcherDemo");
+        string root = DemoRoot;
         var cfg = new AppConfig
         {
             AutoSwitch = true,
@@ -63,7 +68,7 @@ public static class Screenshots
         };
         foreach (var g in Games)
         {
-            string path = Path.Combine(root, Path.GetFileNameWithoutExtension(g.Exe), g.Exe);
+            string path = Path.Combine(root, g.FullName, g.Exe);
             var exe = new ExeMapping { Path = path, FullName = g.FullName, CustomName = g.Custom };
             if (g.TitlePattern != null) { exe.MatchTitle = true; exe.TitlePattern = g.TitlePattern; }
             cfg.Categories.Add(new CategoryMapping
@@ -123,13 +128,13 @@ public static class Screenshots
         try
         {
             App.Twitch.UseDemo("YourChannel");
-            var neon = App.Config.Categories.First(c => c.Name == "Neon White");
-            App.Switcher.SetDemo(new ChannelInfo { GameId = neon.Id, GameName = neon.Name,
-                Title = "Multiworld Day 2 | Now playing: Neon White | !discord" }, isLive: true, viewers: 42);
+            var onStream = App.Config.Categories.First(c => c.Name == "Super Mario 64");
+            App.Switcher.SetDemo(new ChannelInfo { GameId = onStream.Id, GameName = onStream.Name,
+                Title = "Multiworld Day 2 | Now playing: SM64 | !discord" }, isLive: true, viewers: 42);
             App.Watcher.StartDemo();
             _ = App.Updater.CheckAsync();
 
-            w.Width = 1100; w.Height = 860;
+            w.Width = 1100; w.Height = 920;
             w.Left = 0; w.Top = 0;
             await Task.Delay(4000);                       // box art downloads + first layout
 
@@ -148,13 +153,13 @@ public static class Screenshots
             await Shot(() => w.NavManual.IsChecked = true, "manual.png");
             await Shot(() => w.NavBehaviour.IsChecked = true, "behaviour.png");
             await Shot(() => w.NavSettings.IsChecked = true, "settings.png");
-            await Shot(() => w.NavMappings.IsChecked = true, "on-stream-panel.png", w.NowCard, pad: 16);
+            await Shot(() => w.NavMappings.IsChecked = true, "on-stream-panel.png", w.NowCard, pad: 14);
         }
         catch (Exception ex) { App.LogError("screenshots", ex); }
         finally
         {
             foreach (var p in Demo) { try { p.Kill(); } catch { } }
-            try { Directory.Delete(Path.Combine(Path.GetTempPath(), "AutoSwitcherDemo"), true); } catch { }
+            foreach (var g in Games) { try { Directory.Delete(Path.Combine(DemoRoot, g.FullName), true); } catch { } }
         }
     }
 
@@ -165,24 +170,35 @@ public static class Screenshots
         if (hit != null) App.Watcher.DemoPending(hit, TimeSpan.FromSeconds(1.2));
     }
 
-    /// <summary>Render an element at 2× onto the app background (plus optional padding) and save it as PNG.</summary>
+    /// <summary>
+    /// Render the whole window at 2× onto the app background and save it, or just one element's area
+    /// (plus padding) cropped out of that render, so it looks exactly as it does in the window.
+    /// </summary>
     private static void Save(FrameworkElement el, string file, double pad)
     {
         const double scale = 2;
-        double w = el.ActualWidth, h = el.ActualHeight;
-        var bg = (Brush)Application.Current.FindResource(pad > 0 ? "SideBrush" : "BgBrush");
+        var root = (FrameworkElement)Application.Current.MainWindow!.Content;
+        double w = root.ActualWidth, h = root.ActualHeight;
         var dv = new DrawingVisual();
         using (var dc = dv.RenderOpen())
         {
-            dc.DrawRectangle(bg, null, new Rect(0, 0, w + pad * 2, h + pad * 2));
-            var vb = new VisualBrush(el) { Stretch = Stretch.Fill, ViewboxUnits = BrushMappingMode.Absolute, Viewbox = new Rect(0, 0, w, h) };
-            dc.DrawRectangle(vb, null, new Rect(pad, pad, w, h));
+            dc.DrawRectangle((Brush)Application.Current.FindResource("BgBrush"), null, new Rect(0, 0, w, h));
+            var vb = new VisualBrush(root) { Stretch = Stretch.Fill, ViewboxUnits = BrushMappingMode.Absolute, Viewbox = new Rect(0, 0, w, h) };
+            dc.DrawRectangle(vb, null, new Rect(0, 0, w, h));
         }
-        var rtb = new RenderTargetBitmap((int)Math.Ceiling((w + pad * 2) * scale), (int)Math.Ceiling((h + pad * 2) * scale),
-                                         96 * scale, 96 * scale, PixelFormats.Pbgra32);
+        var rtb = new RenderTargetBitmap((int)Math.Ceiling(w * scale), (int)Math.Ceiling(h * scale), 96 * scale, 96 * scale, PixelFormats.Pbgra32);
         rtb.Render(dv);
+
+        BitmapSource img = rtb;
+        if (!ReferenceEquals(el, root))
+        {
+            var r = el.TransformToAncestor(root).TransformBounds(new Rect(0, 0, el.ActualWidth, el.ActualHeight));
+            r.Inflate(pad, pad);
+            r.Intersect(new Rect(0, 0, w, h));
+            img = new CroppedBitmap(rtb, new Int32Rect((int)(r.X * scale), (int)(r.Y * scale), (int)(r.Width * scale), (int)(r.Height * scale)));
+        }
         var enc = new PngBitmapEncoder();
-        enc.Frames.Add(BitmapFrame.Create(rtb));
+        enc.Frames.Add(BitmapFrame.Create(img));
         using var fs = File.Create(file);
         enc.Save(fs);
         Log.Info("screenshots", "Saved " + file);

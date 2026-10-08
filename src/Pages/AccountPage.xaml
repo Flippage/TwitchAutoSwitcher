@@ -52,7 +52,9 @@
             <Border x:Name="SignedInCard" Style="{StaticResource Card}" Padding="20,18" Margin="0,8,0,0">
                 <DockPanel>
                     <Button DockPanel.Dock="Right" Style="{StaticResource OutlineButton}" Content="Disconnect" Click="Disconnect_Click" VerticalAlignment="Center"/>
-                    <Border x:Name="ProfileArt" Width="56" Height="56" CornerRadius="28" DockPanel.Dock="Left"/>
+                    <Border x:Name="ProfileArt" Width="56" Height="56" CornerRadius="28" DockPanel.Dock="Left">
+                        <TextBlock x:Name="ProfileLetter" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
                     <StackPanel Margin="16,0,0,0" VerticalAlignment="Center">
                         <TextBlock x:Name="ProfileName" FontSize="17" FontWeight="Bold"/>
                         <TextBlock Text="Connected · token renews automatically" FontSize="13" Foreground="{StaticResource GoodBrush}" Margin="0,4,0,0"/>

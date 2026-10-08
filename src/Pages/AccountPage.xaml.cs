@@ -146,7 +146,11 @@ public partial class AccountPage : UserControl
         {
             var t = App.Twitch.Tokens!;
             ProfileName.Text = string.IsNullOrEmpty(t.DisplayName) ? t.Login : t.DisplayName;
-            Art.SetUrl(ProfileArt, string.IsNullOrEmpty(t.ProfileImageUrl) ? null : t.ProfileImageUrl);
+            bool hasPic = !string.IsNullOrEmpty(t.ProfileImageUrl);
+            Art.SetUrl(ProfileArt, hasPic ? t.ProfileImageUrl : null);
+            // No profile picture: show the first letter, like the sidebar chip.
+            ProfileLetter.Text = hasPic || ProfileName.Text.Length == 0 ? "" : ProfileName.Text.Substring(0, 1).ToUpperInvariant();
+            if (!hasPic) ProfileArt.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x3A, 0x3A, 0x3A));
             StopDeviceFlow();
         }
 
