@@ -235,11 +235,10 @@ public partial class MainWindow : Window
         int n = _stack.Count;
         if (n == 0)
         {
-            DetStack.Visibility = Visibility.Collapsed;
+            SetStackShown(false);          // fades out with its last content still showing
             _countdown.Stop();
             return;
         }
-        DetStack.Visibility = Visibility.Visible;
         var g = _stack[Math.Clamp(_stackIndex, 0, n - 1)];
         bool isPending = App.Config.AutoSwitch && Same(g, App.Watcher.Pending);
 
@@ -278,6 +277,50 @@ public partial class MainWindow : Window
             DetBarTrack.Visibility = Visibility.Collapsed;
             _countdown.Stop();
         }
+        SetStackShown(true);
+    }
+
+    private bool _stackShown;
+
+    /// <summary>
+    /// Show/hide the detected-game card with a smooth height + fade (220 ms), so the On Stream panel
+    /// resizes gently instead of jumping. Interrupting midway reverses from wherever it is.
+    /// </summary>
+    private void SetStackShown(bool show)
+    {
+        if (show == _stackShown) return;
+        _stackShown = show;
+        var dur = TimeSpan.FromMilliseconds(220);
+        var ease = new CubicEase { EasingMode = EasingMode.EaseInOut };
+        const double top = 10;
+
+        // Pin the current height so the animation has a real starting value.
+        double from = DetStack.Visibility == Visibility.Visible ? DetStack.ActualHeight : 0;
+        double to = 0;
+        if (show)
+        {
+            DetStack.Visibility = Visibility.Visible;
+            DetStack.BeginAnimation(HeightProperty, null);
+            DetStack.Height = double.NaN;
+            double w = (DetStack.Parent as FrameworkElement)?.ActualWidth ?? 0;
+            DetStack.Measure(new Size(w > 0 ? w : 170, double.PositiveInfinity));
+            to = DetStack.DesiredSize.Height - DetStack.Margin.Top - DetStack.Margin.Bottom;
+            if (DetStack.Opacity >= 1) DetStack.Opacity = 0;
+        }
+        DetStack.Height = from;
+
+        var h = new DoubleAnimation(from, to, dur) { EasingFunction = ease };
+        h.Completed += (_, _) =>
+        {
+            if (_stackShown != show) return;           // reversed midway: the newer animation owns it
+            DetStack.BeginAnimation(HeightProperty, null);
+            DetStack.Height = double.NaN;              // back to natural height so content changes size normally
+            if (!show) DetStack.Visibility = Visibility.Collapsed;
+        };
+        DetStack.BeginAnimation(HeightProperty, h);
+        DetStack.BeginAnimation(MarginProperty, new ThicknessAnimation(new Thickness(0, show ? top : 0, 0, 0), dur) { EasingFunction = ease });
+        DetStack.BeginAnimation(OpacityProperty, new DoubleAnimation(show ? 1 : 0, TimeSpan.FromMilliseconds(show ? 220 : 150))
+            { EasingFunction = ease, BeginTime = show ? TimeSpan.FromMilliseconds(60) : TimeSpan.Zero });
     }
 
     /// <summary>‹ › : fade out (150 ms) → next game → fade in (150 ms).</summary>
@@ -524,6 +567,11 @@ public partial class MainWindow : Window
     {
         UpdateNowPlaying();
         if (_stack.Count < 2) throw new InvalidOperationException($"Self-test expected 2+ running games in the stack, found {_stack.Count}.");
+        if (!ToggleReady.GetIsReady(SideAutoToggle))
+            throw new InvalidOperationException("Toggles never became ready, so they wouldn't animate when clicked.");
+        await System.Threading.Tasks.Task.Delay(400);
+        if (DetStack.Visibility != Visibility.Visible || DetStack.ActualHeight < 20)
+            throw new InvalidOperationException("Detected-game card didn't animate open.");
         FlipStack(+1);
         await System.Threading.Tasks.Task.Delay(500);
         FlipStack(-1);

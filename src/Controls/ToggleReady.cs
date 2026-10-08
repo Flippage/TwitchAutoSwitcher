@@ -15,13 +15,18 @@ public static class ToggleReady
     public static bool GetIsReady(DependencyObject d) => (bool)d.GetValue(IsReadyProperty);
     public static void SetIsReady(DependencyObject d, bool v) => d.SetValue(IsReadyProperty, v);
 
-    private static bool _registered;
+    /// <summary>Set from the Toggle style. Hooks this toggle's own Loaded event (WPF only raises Loaded on
+    /// elements that have an instance handler, so a class-level handler isn't enough).</summary>
+    public static readonly DependencyProperty TrackProperty = DependencyProperty.RegisterAttached(
+        "Track", typeof(bool), typeof(ToggleReady), new PropertyMetadata(false, OnTrackChanged));
 
-    public static void Register()
+    public static bool GetTrack(DependencyObject d) => (bool)d.GetValue(TrackProperty);
+    public static void SetTrack(DependencyObject d, bool v) => d.SetValue(TrackProperty, v);
+
+    private static void OnTrackChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (_registered) return;
-        _registered = true;
-        EventManager.RegisterClassHandler(typeof(CheckBox), FrameworkElement.LoadedEvent,
-            new RoutedEventHandler((s, _) => { if (s is CheckBox cb) SetIsReady(cb, true); }));
+        if (d is not FrameworkElement fe || e.NewValue is not true) return;
+        if (fe.IsLoaded) { SetIsReady(fe, true); return; }
+        fe.Loaded += (_, _) => SetIsReady(fe, true);
     }
 }

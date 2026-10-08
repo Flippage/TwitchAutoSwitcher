@@ -91,7 +91,7 @@
                                    TextAlignment="Center" Margin="0,6,0,0" Visibility="Collapsed"/>
 
                         <!-- Running mapped games that aren't on stream: a stack you can flip through -->
-                        <Grid x:Name="DetStack" Margin="0,10,0,0" Visibility="Collapsed">
+                        <Grid x:Name="DetStack" Margin="0,0,0,0" Visibility="Collapsed" Opacity="0">
                             <Border x:Name="DetBack2" Margin="-8,16" CornerRadius="9" BorderThickness="1" Visibility="Collapsed"/>
                             <Border x:Name="DetBack1" Margin="-4,8" CornerRadius="9" BorderThickness="1" Visibility="Collapsed"/>
                             <Border x:Name="DetBox" Padding="8" CornerRadius="9" BorderThickness="1">

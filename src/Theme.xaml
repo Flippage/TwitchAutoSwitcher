@@ -301,6 +301,7 @@
 
     <!-- Toggle switch -->
     <Style x:Key="Toggle" TargetType="CheckBox">
+        <Setter Property="local:ToggleReady.Track" Value="True"/>
         <Setter Property="Foreground" Value="{StaticResource Text2Brush}"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Cursor" Value="Hand"/>

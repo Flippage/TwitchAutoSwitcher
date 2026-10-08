@@ -8,6 +8,14 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.9] - 2026-10-08
+
+### Changed
+- The detected-game card in the On Stream panel now slides open and closed with a fade, so the panel resizes smoothly (for example when you pause a game that's being detected).
+
+### Fixed
+- Clicking a mapping's toggle in 1.1.8 paused or resumed it but the switch didn't move. Toggles animate correctly again.
+
 ## [1.1.8] - 2026-10-08
 
 ### Fixed
