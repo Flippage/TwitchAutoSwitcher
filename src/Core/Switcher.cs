@@ -26,6 +26,16 @@ public sealed class Switcher
     public bool? IsLive { get; private set; }
     public int Viewers { get; private set; }
     public GameHit? Current { get; private set; }
+
+    /// <summary>Forget the current game if it belongs to a mapping that was paused or removed.</summary>
+    public void ForgetIfInactive(System.Collections.Generic.IList<CategoryMapping> categories)
+    {
+        if (Current == null) return;
+        if (Current.Category.Enabled && categories.Contains(Current.Category)) return;
+        Log.Info("switch", $"Forgot current game (mapping paused or removed): {Current.Category.Name}");
+        Current = null;
+        Changed?.Invoke();
+    }
     public string? LastError { get; private set; }
     public DateTime? LastSwitchUtc { get; private set; }
 

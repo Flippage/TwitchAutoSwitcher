@@ -143,9 +143,13 @@ public partial class App : Application
             window.SelfTestVisitPages();
             await window.SelfTestFlipStackAsync();
             await window.SelfTestConfirmAsync();
-            // Pausing a mapping must remove it from detection straight away.
+            // Pausing a mapping must remove it from detection straight away — including a game picked with Switch now.
+            if (Watcher.Running.FirstOrDefault(h => h.Category.Id == "3") is { } three) await Switcher.SwitchNowAsync(three);
             Config.Categories[2].Enabled = false;
             Watcher.UpdateMappings(Config.Categories);
+            Switcher.ForgetIfInactive(Config.Categories);
+            if (Switcher.Current?.Category.Id == "3")
+                throw new InvalidOperationException("A paused mapping was still remembered as the current game.");
             if (Watcher.Running.Any(h => h.Category.Id == "3"))
                 throw new InvalidOperationException("A paused mapping was still detected.");
             Config.Categories[2].Enabled = true;

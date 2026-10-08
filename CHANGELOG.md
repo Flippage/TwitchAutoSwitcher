@@ -8,6 +8,11 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.11] - 2026-10-08
+
+### Fixed
+- Pausing (or removing) a game you'd just switched to with **Switch now** left it showing as **Mapped game detected**. The panel now only shows games that are actually running and turned on.
+
 ## [1.1.10] - 2026-10-08
 
 ### Changed

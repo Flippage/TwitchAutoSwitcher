@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -146,7 +147,10 @@ public partial class MainWindow : Window
     private void UpdateNowPlaying()
     {
         var cfg = App.Config;
+        // Only trust the last switched-to game while it's still running and its mapping is on
+        // (a manual Switch now, a paused mapping or a closed game can leave it stale).
         var hit = App.Switcher.Current;
+        if (hit != null && !App.Watcher.Running.Any(r => Same(r, hit))) hit = null;
         var pending = App.Watcher.Pending;
         var live = App.Switcher.Live;
         bool hasLive = live != null && !string.IsNullOrEmpty(live.GameName);

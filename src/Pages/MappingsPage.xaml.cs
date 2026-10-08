@@ -107,6 +107,7 @@ public partial class MappingsPage : UserControl
         Log.Info("ui", $"Mapping {(c.Enabled ? "enabled" : "paused")}: {c.Name}");
         App.SaveConfig();
         App.Watcher.UpdateMappings(App.Config.Categories);
+        App.Switcher.ForgetIfInactive(App.Config.Categories);
         (box.DataContext as CategoryRow)?.NotifyEnabled();   // update just this row; the others stay untouched
     }
 
@@ -126,6 +127,7 @@ public partial class MappingsPage : UserControl
         App.Config.Categories.Remove(c);
         App.SaveConfig();
         App.Watcher.UpdateMappings(App.Config.Categories);
+        App.Switcher.ForgetIfInactive(App.Config.Categories);
         Refresh();
     }
 }

@@ -169,6 +169,7 @@ public partial class EditCategoryPage : UserControl
         App.Config.Categories.RemoveAll(c => c.Executables.Count == 0);
         App.SaveConfig();
         App.Watcher.UpdateMappings(App.Config.Categories);
+        App.Switcher.ForgetIfInactive(App.Config.Categories);
         (Window.GetWindow(this) as MainWindow)?.CloseEditor();
     }
 }
