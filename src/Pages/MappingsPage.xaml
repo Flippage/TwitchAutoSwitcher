@@ -29,15 +29,26 @@
                         <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="8,8,10,8" Margin="0,0,0,8">
                             <DockPanel>
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding Enabled, Mode=OneWay}" Tag="{Binding Category}"
+                                              ToolTip="{Binding ToggleTip}" Click="Enabled_Click" VerticalAlignment="Center" Margin="0,0,14,0"/>
                                     <Button Style="{StaticResource IconButton}" Tag="{StaticResource IconPencil}" ToolTip="Edit"
                                             CommandParameter="{Binding Category}" Click="Edit_Click"/>
                                     <Button Style="{StaticResource IconButton}" Tag="{StaticResource IconTrash}" ToolTip="Remove"
                                             CommandParameter="{Binding Category}" Click="Delete_Click"/>
                                 </StackPanel>
-                                <Border Width="40" Height="54" CornerRadius="4" DockPanel.Dock="Left" local:Art.Url="{Binding Category.BoxArtUrl}"/>
+                                <Border Width="40" Height="54" CornerRadius="4" DockPanel.Dock="Left" local:Art.Url="{Binding Category.BoxArtUrl}"
+                                        Opacity="{Binding ContentOpacity}"/>
                                 <StackPanel Margin="16,0,8,0" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Category.Name}" Style="{StaticResource ItemTitle}" TextTrimming="CharacterEllipsis"/>
-                                    <ItemsControl ItemsSource="{Binding Chips}" Margin="0,2,0,0">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Left" Text="{Binding Category.Name}" Style="{StaticResource ItemTitle}"
+                                                   TextTrimming="CharacterEllipsis" Opacity="{Binding ContentOpacity}"/>
+                                        <Border DockPanel.Dock="Left" Visibility="{Binding PausedTag}" CornerRadius="6" Padding="6,1,6,2"
+                                                Margin="10,0,0,0" VerticalAlignment="Center" Background="{StaticResource HoverBrush}">
+                                            <TextBlock Text="PAUSED" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource Text2Brush}"/>
+                                        </Border>
+                                        <Border/>
+                                    </DockPanel>
+                                    <ItemsControl ItemsSource="{Binding Chips}" Margin="0,2,0,0" Opacity="{Binding ContentOpacity}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <WrapPanel/>

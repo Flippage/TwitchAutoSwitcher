@@ -8,6 +8,14 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.7] - 2026-10-08
+
+### Added
+- An on/off toggle for each category on **Mappings**. Paused categories stay in your list but are never detected or switched to, and show a **PAUSED** tag.
+
+### Fixed
+- **Switch now** and other smaller buttons are now evenly rounded pills instead of a stretched oval.
+
 ## [1.1.6] - 2026-10-08
 
 ### Changed

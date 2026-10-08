@@ -76,6 +76,7 @@
    - Search for the Twitch category (box art included).
    - Add one or more executables with **Browse for .exe…** or **Pick running**.
    - Optionally set a **Custom Name** for each executable, e.g. `Zelda OoT SoH`.
+   - Use the toggle on each category to **pause** it. It stays in your list but is ignored until you turn it back on.
 3. **Choose how to detect:** on **Behaviour**, pick **A game launches** or **A game window is focused**.
 4. **Set your title (optional):** on **Stream Titles**, write a template and insert name pills.
 
@@ -236,6 +237,7 @@ src/
 <summary><b>The category doesn't switch</b></summary>
 
 - Make sure **Auto-switch** is on (sidebar). Manual mode and a manual **Switch now** pause it. Click **AUTO OFF** to resume.
+- Check the category isn't **paused** on Mappings (its toggle is off and it shows a PAUSED tag).
 - Check that the executable on the mapping matches the game you're running (path or file name).
 - In focus mode, the game must stay focused for the **focus delay** (Behaviour).
 - For emulators, check the **Match window title** text appears in the window's title (use **Use current title** to copy it).

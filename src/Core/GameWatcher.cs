@@ -95,8 +95,10 @@ public sealed class GameWatcher : IDisposable
     {
         var byPath = new Dictionary<string, List<Candidate>>(StringComparer.OrdinalIgnoreCase);
         var byName = new Dictionary<string, List<Candidate>>(StringComparer.OrdinalIgnoreCase);
-        int count = 0;
+        int count = 0, paused = 0;
         foreach (var c in categories)
+        {
+            if (!c.Enabled) { paused++; continue; }      // paused mappings are never detected
             foreach (var e in c.Executables)
             {
                 if (string.IsNullOrWhiteSpace(e.Path)) continue;
@@ -110,15 +112,16 @@ public sealed class GameWatcher : IDisposable
                 Add(byName, e.ProcessName, cand);   // fallback if the game was moved/reinstalled
                 count++;
             }
+        }
         _byPath = byPath;
         _byName = byName;
-        Log.Info("detect", $"Mappings loaded: {count} executable(s)");
+        Log.Info("detect", $"Mappings loaded: {count} executable(s)" + (paused > 0 ? $", {paused} paused categor{(paused == 1 ? "y" : "ies")}" : ""));
 
         _known.Clear();
         _firstSeen.Clear();
         _titleWatch.Clear();
         _primed = false;
-        if (Current != null && Resolve((uint)Current.Pid, null) is { } still) Current = still;
+        if (Current != null) Current = Resolve((uint)Current.Pid, null);   // null if its mapping was paused or removed
         if (_running) Start(Mode);
 
         static void Add(Dictionary<string, List<Candidate>> d, string key, Candidate c)

@@ -39,6 +39,8 @@ public sealed class CategoryMapping
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public string BoxArtUrl { get; set; } = "";
+    /// <summary>Off = kept in the list but never switched to (paused).</summary>
+    public bool Enabled { get; set; } = true;
     public List<ExeMapping> Executables { get; set; } = new();
 }
 

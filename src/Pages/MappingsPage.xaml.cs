@@ -13,6 +13,11 @@ public sealed class CategoryRow
 {
     public required CategoryMapping Category { get; init; }
     public required List<ExeChip> Chips { get; init; }
+    public bool Enabled => Category.Enabled;
+    public double ContentOpacity => Category.Enabled ? 1 : 0.4;
+    public Visibility PausedTag => Category.Enabled ? Visibility.Collapsed : Visibility.Visible;
+    public string ToggleTip => Category.Enabled ? "On: AutoSwitcher switches to this game. Click to pause."
+                                                : "Paused: AutoSwitcher ignores this game. Click to turn on.";
 }
 
 public sealed class ExeChip
@@ -85,6 +90,16 @@ public partial class MappingsPage : UserControl
     {
         if (sender is Button { CommandParameter: CategoryMapping c })
             (Window.GetWindow(this) as MainWindow)?.OpenEditor(c);
+    }
+
+    private void Enabled_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not CheckBox { Tag: CategoryMapping c } box) return;
+        c.Enabled = box.IsChecked == true;
+        Log.Info("ui", $"Mapping {(c.Enabled ? "enabled" : "paused")}: {c.Name}");
+        App.SaveConfig();
+        App.Watcher.UpdateMappings(App.Config.Categories);
+        Refresh();
     }
 
     private async void Delete_Click(object sender, RoutedEventArgs e)

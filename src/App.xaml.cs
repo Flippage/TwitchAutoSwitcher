@@ -143,6 +143,13 @@ public partial class App : Application
             window.SelfTestVisitPages();
             await window.SelfTestFlipStackAsync();
             await window.SelfTestConfirmAsync();
+            // Pausing a mapping must remove it from detection straight away.
+            Config.Categories[2].Enabled = false;
+            Watcher.UpdateMappings(Config.Categories);
+            if (Watcher.Running.Any(h => h.Category.Id == "3"))
+                throw new InvalidOperationException("A paused mapping was still detected.");
+            Config.Categories[2].Enabled = true;
+            Watcher.UpdateMappings(Config.Categories);
             Watcher.Start(DetectionMode.Focus);
             await Task.Delay(1500);                     // let the 1 s focus check run at least once
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
