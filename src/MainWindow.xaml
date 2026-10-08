@@ -85,7 +85,7 @@
                         </Grid>
                         <TextBlock x:Name="NowGame" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center"
                                    MaxHeight="40" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock x:Name="NowExe" FontSize="11.5" Foreground="{StaticResource SubBrush}" TextAlignment="Center"
+                        <TextBlock x:Name="NowExe" FontSize="11.5" LineHeight="16" LineStackingStrategy="BlockLineHeight" Foreground="{StaticResource SubBrush}" TextAlignment="Center"
                                    TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                         <TextBlock x:Name="NowError" FontSize="11" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap"
                                    TextAlignment="Center" Margin="0,6,0,0" Visibility="Collapsed"/>
@@ -98,16 +98,16 @@
                                 <StackPanel>
                                     <StackPanel x:Name="DetContent">
                                         <DockPanel>
-                                            <TextBlock x:Name="DetCounter" DockPanel.Dock="Right" FontSize="9.5" FontWeight="Bold"
+                                            <TextBlock x:Name="DetCounter" DockPanel.Dock="Right" FontSize="9.5" LineHeight="13" LineStackingStrategy="BlockLineHeight" FontWeight="Bold"
                                                        Foreground="{StaticResource SubBrush}" Visibility="Collapsed"/>
-                                            <TextBlock x:Name="DetLabel" FontSize="9.5" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock x:Name="DetLabel" FontSize="9.5" LineHeight="13" LineStackingStrategy="BlockLineHeight" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                         </DockPanel>
                                         <DockPanel Margin="0,6,0,0" MinHeight="36">
                                             <Border x:Name="DetArt" Width="27" Height="36" CornerRadius="3" DockPanel.Dock="Left" VerticalAlignment="Center"/>
                                             <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
                                                 <TextBlock x:Name="DetName" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap"
                                                            TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock x:Name="DetExe" FontSize="10.5" Foreground="{StaticResource SubBrush}"
+                                                <TextBlock x:Name="DetExe" FontSize="10.5" LineHeight="14" LineStackingStrategy="BlockLineHeight" Foreground="{StaticResource SubBrush}"
                                                            TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                         </DockPanel>

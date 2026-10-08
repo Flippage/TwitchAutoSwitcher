@@ -8,6 +8,11 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.5] - 2026-10-08
+
+### Fixed
+- The On Stream panel no longer changes height slightly when the line under the category switches between "Set on Twitch" and "✓ … detected".
+
 ## [1.1.4] - 2026-10-08
 
 ### Changed
