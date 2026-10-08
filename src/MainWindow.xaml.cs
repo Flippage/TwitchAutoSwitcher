@@ -249,10 +249,12 @@ public partial class MainWindow : Window
 
         bool multi = n > 1;
         DetCounter.Text = $"{_stackIndex + 1}/{n}";
-        DetCounter.Visibility = multi ? Visibility.Visible : Visibility.Collapsed;
-        DetPrev.Visibility = DetNext.Visibility = multi ? Visibility.Visible : Visibility.Collapsed;
-        DetBack1.Visibility = n >= 2 ? Visibility.Visible : Visibility.Collapsed;
-        DetBack2.Visibility = n >= 3 ? Visibility.Visible : Visibility.Collapsed;
+        // Animate only while the card is already on screen; when it's opening, just start in the right state.
+        bool animate = _stackShown;
+        SetArrowsShown(multi, animate);
+        Fade(DetCounter, multi, animate);
+        Fade(DetBack1, n >= 2, animate);
+        Fade(DetBack2, n >= 3, animate);
 
         Brush line = (Brush)FindResource(isPending ? "AccentLineBrush" : "WarnLineBrush");
         Brush fg = (Brush)FindResource(isPending ? "AccentBrush" : "WarnBrush");
@@ -281,6 +283,45 @@ public partial class MainWindow : Window
     }
 
     private bool _stackShown;
+    private bool? _arrowsShown;
+    private static readonly CubicEase SmoothEase = new() { EasingMode = EasingMode.EaseInOut };
+
+    /// <summary>‹ › slide in from zero width (Switch now condenses to make room) or slide out (it expands).</summary>
+    private void SetArrowsShown(bool show, bool animate)
+    {
+        if (_arrowsShown == show) return;
+        _arrowsShown = show;
+        var dur = TimeSpan.FromMilliseconds(animate ? 220 : 0);
+        foreach (var (b, left) in new[] { (DetPrev, true), (DetNext, false) })
+        {
+            b.IsHitTestVisible = show;
+            b.IsTabStop = show;
+            b.BeginAnimation(WidthProperty, new DoubleAnimation(show ? 22 : 0, dur) { EasingFunction = SmoothEase });
+            var m = left ? new Thickness(0, 0, show ? 5 : 0, 0) : new Thickness(show ? 5 : 0, 0, 0, 0);
+            b.BeginAnimation(MarginProperty, new ThicknessAnimation(m, dur) { EasingFunction = SmoothEase });
+            b.BeginAnimation(OpacityProperty, new DoubleAnimation(show ? 1 : 0, TimeSpan.FromMilliseconds(animate ? (show ? 160 : 120) : 0))
+                { EasingFunction = SmoothEase, BeginTime = TimeSpan.FromMilliseconds(animate && show ? 80 : 0) });
+        }
+    }
+
+    /// <summary>Fade an element in or out (collapsing it once faded out).</summary>
+    private static void Fade(UIElement el, bool show, bool animate)
+    {
+        bool visible = el.Visibility == Visibility.Visible && el.Opacity > 0;
+        if (show && visible && el.Opacity >= 1) return;
+        if (!show && el.Visibility != Visibility.Visible) return;
+        if (!animate)
+        {
+            el.BeginAnimation(OpacityProperty, null);
+            el.Opacity = show ? 1 : 0;
+            el.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            return;
+        }
+        if (show) el.Visibility = Visibility.Visible;
+        var a = new DoubleAnimation(show ? 1 : 0, TimeSpan.FromMilliseconds(show ? 200 : 150)) { EasingFunction = SmoothEase };
+        if (!show) a.Completed += (_, _) => { if (el.Opacity <= 0.01) el.Visibility = Visibility.Collapsed; };
+        el.BeginAnimation(OpacityProperty, a);
+    }
 
     /// <summary>
     /// Show/hide the detected-game card with a smooth height + fade (220 ms), so the On Stream panel
@@ -572,6 +613,8 @@ public partial class MainWindow : Window
         await System.Threading.Tasks.Task.Delay(400);
         if (DetStack.Visibility != Visibility.Visible || DetStack.ActualHeight < 20)
             throw new InvalidOperationException("Detected-game card didn't animate open.");
+        if (DetPrev.ActualWidth < 20 || !DetPrev.IsHitTestVisible)
+            throw new InvalidOperationException("‹ › arrows didn't appear for 2+ games.");
         FlipStack(+1);
         await System.Threading.Tasks.Task.Delay(500);
         FlipStack(-1);

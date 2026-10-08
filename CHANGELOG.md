@@ -8,6 +8,11 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.10] - 2026-10-08
+
+### Changed
+- When a second game is detected (or one goes away), the ‹ › arrows slide in or out while **Switch now** smoothly narrows or widens to make room. The game counter and the stacked card edges fade in and out with them.
+
 ## [1.1.9] - 2026-10-08
 
 ### Changed

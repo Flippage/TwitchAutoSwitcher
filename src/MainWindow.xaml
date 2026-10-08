@@ -126,8 +126,8 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Button x:Name="DetPrev" Style="{StaticResource PillButton}" Width="22" Height="22" Padding="0"
-                                                Margin="0,0,5,0" ToolTip="Previous game" Click="DetPrev_Click" Visibility="Collapsed">
+                                        <Button x:Name="DetPrev" Style="{StaticResource PillButton}" Width="0" Height="22" Padding="0"
+                                                Margin="0" Opacity="0" IsHitTestVisible="False" IsTabStop="False" ClipToBounds="True" ToolTip="Previous game" Click="DetPrev_Click">
                                             <Viewbox Width="9" Height="9">
                                                 <Path Style="{StaticResource Icon}" Data="M15,6 L9,12 L15,18" StrokeThickness="3.2"
                                                       Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
@@ -137,8 +137,8 @@
                                                 FontWeight="Bold" Click="SwitchNow_Click">
                                             <TextBlock Text="Switch now" TextTrimming="CharacterEllipsis"/>
                                         </Button>
-                                        <Button x:Name="DetNext" Grid.Column="2" Style="{StaticResource PillButton}" Width="22" Height="22" Padding="0"
-                                                Margin="5,0,0,0" ToolTip="Next game" Click="DetNext_Click" Visibility="Collapsed">
+                                        <Button x:Name="DetNext" Grid.Column="2" Style="{StaticResource PillButton}" Width="0" Height="22" Padding="0"
+                                                Margin="0" Opacity="0" IsHitTestVisible="False" IsTabStop="False" ClipToBounds="True" ToolTip="Next game" Click="DetNext_Click">
                                             <Viewbox Width="9" Height="9">
                                                 <Path Style="{StaticResource Icon}" Data="M9,6 L15,12 L9,18" StrokeThickness="3.2"
                                                       Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
