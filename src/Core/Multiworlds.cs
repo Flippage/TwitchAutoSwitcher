@@ -59,6 +59,14 @@ public static class Multiworlds
         Apply();
     }
 
+    public static void AllOff()
+    {
+        foreach (var c in Cfg.Categories) c.Enabled = false;
+        Clear();
+        Log.Info("multiworld", "All game mappings turned off");
+        Apply();
+    }
+
     /// <summary>
     /// Call after mappings are changed by hand (toggle, add, edit, delete). If the active multiworld no longer
     /// matches what's on, it's deactivated without restoring anything, so the change you just made sticks.

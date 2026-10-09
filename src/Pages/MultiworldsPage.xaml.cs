@@ -38,6 +38,7 @@ public partial class MultiworldsPage : UserControl
         WorldList.ItemsSource = rows;
         EmptyState.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         AllOnBtn.IsEnabled = App.Config.Categories.Any(c => !c.Enabled);
+        AllOffBtn.IsEnabled = App.Config.Categories.Any(c => c.Enabled);
     }
 
     private MainWindow? Main => Window.GetWindow(this) as MainWindow;
@@ -63,6 +64,12 @@ public partial class MultiworldsPage : UserControl
     private void AllOn_Click(object sender, RoutedEventArgs e)
     {
         Multiworlds.AllOn();
+        Refresh();
+    }
+
+    private void AllOff_Click(object sender, RoutedEventArgs e)
+    {
+        Multiworlds.AllOff();
         Refresh();
     }
 

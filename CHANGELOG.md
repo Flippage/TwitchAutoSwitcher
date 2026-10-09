@@ -8,6 +8,11 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.2.2] - 2026-10-09
+
+### Added
+- **All games off** on the Multiworlds page pauses every game mapping. **Turn all games on** is now **All games on**. Both deactivate any active multiworld.
+
 ## [1.2.1] - 2026-10-09
 
 ### Added

@@ -20,8 +20,12 @@
                 </StackPanel>
             </Button>
             <Button x:Name="AllOnBtn" DockPanel.Dock="Right" Style="{StaticResource OutlineButton}" Margin="0,0,10,0" Padding="16,0"
-                    Click="AllOn_Click" ToolTip="Turn every game mapping back on">
-                <TextBlock Text="Turn all games on" FontWeight="Normal" Foreground="{StaticResource Text2Brush}"/>
+                    Click="AllOn_Click" ToolTip="Turn every game mapping on (deactivates any multiworld)">
+                <TextBlock Text="All games on" FontWeight="Normal" Foreground="{StaticResource Text2Brush}"/>
+            </Button>
+            <Button x:Name="AllOffBtn" DockPanel.Dock="Right" Style="{StaticResource OutlineButton}" Margin="0,0,10,0" Padding="16,0"
+                    Click="AllOff_Click" ToolTip="Pause every game mapping (deactivates any multiworld)">
+                <TextBlock Text="All games off" FontWeight="Normal" Foreground="{StaticResource Text2Brush}"/>
             </Button>
             <TextBlock Text="Multiworlds" Style="{StaticResource H1}" VerticalAlignment="Center"/>
         </DockPanel>

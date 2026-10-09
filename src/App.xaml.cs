@@ -177,6 +177,8 @@ public partial class App : Application
             Multiworlds.MappingsEdited();
             if (Multiworlds.Active != null || !Config.Categories[2].Enabled)
                 throw new InvalidOperationException("A hand change didn't deactivate the multiworld (or was reverted).");
+            Multiworlds.AllOff();
+            if (Config.Categories.Any(c => c.Enabled)) throw new InvalidOperationException("All games off failed.");
             Multiworlds.AllOn();
             Multiworlds.Delete(mw);
             // Pausing a mapping must remove it from detection straight away — including a game picked with Switch now.
