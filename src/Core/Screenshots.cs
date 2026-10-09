@@ -79,6 +79,12 @@ public static class Screenshots
             });
             if (g.Running) StartFake(path);
         }
+        // Multiworlds: the first matches the games turned on (everything but Celeste), so it shows as active.
+        string Id(string name) => cfg.Categories.First(c => c.Name == name).Id;
+        cfg.Multiworlds.Add(new Multiworld { Name = "Multiworld Day 2", CategoryIds =
+            { Id("The Legend of Zelda: Ocarina of Time"), Id("Hollow Knight"), Id("Super Mario 64"), Id("Super Metroid") } });
+        cfg.Multiworlds.Add(new Multiworld { Name = "Speedrun practice", CategoryIds = { Id("Super Mario 64"), Id("Celeste") } });
+        cfg.Multiworlds.Add(new Multiworld { Name = "Chill Sunday", CategoryIds = { Id("Hollow Knight"), Id("Celeste"), Id("Super Metroid") } });
         return cfg;
     }
 
@@ -134,7 +140,7 @@ public static class Screenshots
             App.Watcher.StartDemo();
             _ = App.Updater.CheckAsync();
 
-            w.Width = 1100; w.Height = 920;
+            w.Width = 1100; w.Height = 950;
             w.Left = 0; w.Top = 0;
             await Task.Delay(4000);                       // box art downloads + first layout
             File.AppendAllText(Path.Combine(Path.GetTempPath(), "autoswitcher-screenshots.log"),
@@ -150,6 +156,7 @@ public static class Screenshots
             }
 
             await Shot(() => w.NavMappings.IsChecked = true, "mappings.png");
+            await Shot(() => w.NavMultiworlds.IsChecked = true, "multiworlds.png");
             await Shot(() => w.NavTitles.IsChecked = true, "stream-titles.png");
             await Shot(() => w.OpenEditor(App.Config.Categories.First(c => c.Name.Contains("Ocarina"))), "edit-category.png");
             await Shot(() => w.NavManual.IsChecked = true, "manual.png");

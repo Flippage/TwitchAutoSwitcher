@@ -13,6 +13,7 @@ public partial class MainWindow : Window
 {
     private readonly MappingsPage _mappings = new();
     private readonly TitlesPage _titles = new();
+    private readonly MultiworldsPage _multiworlds = new();
     private readonly ManualPage _manual = new();
     private readonly BehaviourPage _behaviour = new();
     private readonly AccountPage _settings = new();
@@ -56,7 +57,8 @@ public partial class MainWindow : Window
     private void Nav_Checked(object sender, RoutedEventArgs e)
     {
         if (Host == null) return;
-        Host.Content = sender == NavTitles ? _titles
+        Host.Content = sender == NavMultiworlds ? _multiworlds
+                     : sender == NavTitles ? _titles
                      : sender == NavManual ? _manual
                      : sender == NavBehaviour ? _behaviour
                      : sender == NavSettings ? _settings
@@ -73,6 +75,18 @@ public partial class MainWindow : Window
     {
         _mappings.Refresh();
         Host.Content = _mappings;
+    }
+
+    public void OpenMultiworldEditor(Multiworld? world)
+    {
+        NavMultiworlds.IsChecked = true;
+        Host.Content = new EditMultiworldPage(world);
+    }
+
+    public void CloseMultiworldEditor()
+    {
+        _multiworlds.Refresh();
+        Host.Content = _multiworlds;
     }
 
     public void GoToSettings() => NavSettings.IsChecked = true;
@@ -595,7 +609,7 @@ public partial class MainWindow : Window
     /// <summary>Used by --selftest: open every page and the transient UI so their construction/layout runs.</summary>
     public void SelfTestVisitPages()
     {
-        foreach (var nav in new[] { NavTitles, NavManual, NavBehaviour, NavSettings, NavMappings })
+        foreach (var nav in new[] { NavMultiworlds, NavTitles, NavManual, NavBehaviour, NavSettings, NavMappings })
         {
             nav.IsChecked = true;
             UpdateLayout();
@@ -603,6 +617,9 @@ public partial class MainWindow : Window
         OpenEditor(null);
         UpdateLayout();
         CloseEditor();
+        OpenMultiworldEditor(null);
+        UpdateLayout();
+        CloseMultiworldEditor();
         QueueUpdateToast(true);
         UpdateLayout();
         HideToast();

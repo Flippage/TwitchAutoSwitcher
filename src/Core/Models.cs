@@ -28,9 +28,19 @@ public sealed class AppConfig
     /// <summary>A downloaded, verified update waiting to be installed.</summary>
     public PendingUpdate? PendingUpdate { get; set; }
     public List<CategoryMapping> Categories { get; set; } = new();
+    /// <summary>Saved sets of games; activating one turns those mappings on and pauses the rest.</summary>
+    public List<Multiworld> Multiworlds { get; set; } = new();
 }
 
 /// <summary>A Twitch category (game) as returned by Helix.</summary>
+public sealed class Multiworld
+{
+    public string Id { get; set; } = System.Guid.NewGuid().ToString("N");
+    public string Name { get; set; } = "";
+    /// <summary>Twitch category ids of the mappings in this multiworld.</summary>
+    public List<string> CategoryIds { get; set; } = new();
+}
+
 public sealed class CategoryRef
 {
     public string Id { get; set; } = "";

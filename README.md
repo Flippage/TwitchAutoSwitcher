@@ -26,6 +26,7 @@
 - [Features](#features)
 - [Download & install](#download--install)
 - [Getting started](#getting-started)
+- [Multiworlds](#multiworlds)
 - [Stream titles](#stream-titles)
 - [Manual mode](#manual-mode)
 - [Emulators & window-title matching](#emulators--window-title-matching) (including [RetroArch](#retroarch))
@@ -45,6 +46,7 @@
 | | |
 |---|---|
 | 🎮 **Automatic category switching** | Map Twitch categories to one or more game executables. Launch or focus a game and your category updates. |
+| 🌍 **Multiworlds** | Save sets of games and activate one to switch between only those games. |
 | 📝 **Stream title templates** | Write your title once with **Game Name**, **Game Executable Name** and **Custom Name** pills. They're filled in on every switch. |
 | 🕹️ **Emulator support** | Match by window title as well as by exe, so one emulator can map to many games. Wildcards are supported. |
 | 🔍 **Category search with box art** | Search Twitch categories directly. Box art is shown everywhere and cached locally. |
@@ -102,6 +104,21 @@ The **On Stream** panel in the sidebar always shows the category currently set o
 - On **any other game**, it switches to it and **pauses auto-switch**, so you stay on that category while you jump between windows. Click the amber **AUTO OFF** tag (or the Auto-switch toggle) to resume.
 
 <br clear="right">
+
+---
+
+## Multiworlds
+
+Keep every game you own in **Mappings**, and save the ones you're playing together as a **multiworld**:
+
+- **New multiworld**: give it a name and pick its games (it starts with the games that are turned on right now).
+- **Activate** turns that multiworld's games on and pauses every other mapping, so only those games can switch your category. The active one is marked **ACTIVE**.
+- Each multiworld shows its games at a glance. Use the icons to **edit** (rename or change games), **duplicate** or **delete** it.
+- **Turn all games on** puts every mapping back on.
+
+<p align="center">
+  <img src="docs/screenshots/multiworlds.png" alt="Multiworlds: saved sets of games, one active, each showing its games" width="820">
+</p>
 
 ---
 

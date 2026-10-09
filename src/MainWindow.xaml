@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AutoSwitcher"
-        Title="AutoSwitcher" Icon="pack://application:,,,/Assets/app.ico" Width="1100" Height="900" MinWidth="920" MinHeight="680"
+        Title="AutoSwitcher" Icon="pack://application:,,,/Assets/app.ico" Width="1100" Height="950" MinWidth="920" MinHeight="720"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgBrush}"
         Foreground="{StaticResource TextBrush}"
@@ -168,6 +168,7 @@
                 <!-- Menu: least-used last -->
                 <StackPanel x:Name="NavMenu" VerticalAlignment="Top">
                     <RadioButton x:Name="NavMappings" Style="{StaticResource NavButton}" Content="Mappings" Tag="{StaticResource IconHome}" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavMultiworlds" Style="{StaticResource NavButton}" Content="Multiworlds" Tag="{StaticResource IconGlobe}" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavTitles" Style="{StaticResource NavButton}" Content="Stream Titles" Tag="{StaticResource IconTitles}" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavManual" Style="{StaticResource NavButton}" Content="Manual" Tag="{StaticResource IconPencil}" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavBehaviour" Style="{StaticResource NavButton}" Content="Behaviour" Tag="{StaticResource IconSliders}" Checked="Nav_Checked"/>

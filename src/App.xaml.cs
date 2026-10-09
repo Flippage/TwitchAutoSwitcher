@@ -39,6 +39,7 @@ public partial class App : Application
 
         base.OnStartup(e);
         _selfTest = e.Args.Contains("--selftest", StringComparer.OrdinalIgnoreCase);
+        if (_selfTest) ConfigStore.ReadOnly = true;   // the self-test adds sample mappings: never save them
         int si = Array.FindIndex(e.Args, a => a.Equals("--screenshots", StringComparison.OrdinalIgnoreCase));
         if (si >= 0) _screenshotDir = System.IO.Path.GetFullPath(si + 1 < e.Args.Length ? e.Args[si + 1] : "screenshots");
         DispatcherUnhandledException += (_, args) =>
@@ -158,6 +159,18 @@ public partial class App : Application
             window.SelfTestVisitPages();
             await window.SelfTestFlipStackAsync();
             await window.SelfTestConfirmAsync();
+            // A multiworld turns exactly its games on; "all on" restores.
+            var mw = new Multiworld { Name = "Self-test world", CategoryIds = { "1", "2" } };
+            Config.Multiworlds.Add(mw);
+            Multiworlds.Activate(mw);
+            if (!Multiworlds.IsActive(mw) || Config.Categories.Any(c => c.Enabled != (c.Id is "1" or "2")))
+                throw new InvalidOperationException("Activating a multiworld didn't set the right games.");
+            if (Watcher.Running.Any(h => h.Category.Id == "3")) throw new InvalidOperationException("A game outside the multiworld was still detected.");
+            window.NavMultiworlds.IsChecked = true;
+            window.UpdateLayout();
+            Multiworlds.AllOn();
+            if (Config.Categories.Any(c => !c.Enabled) || Multiworlds.IsActive(mw)) throw new InvalidOperationException("Turn all games on failed.");
+            Config.Multiworlds.Remove(mw);
             // Pausing a mapping must remove it from detection straight away — including a game picked with Switch now.
             if (Watcher.Running.FirstOrDefault(h => h.Category.Id == "3") is { } three) await Switcher.SwitchNowAsync(three);
             Config.Categories[2].Enabled = false;

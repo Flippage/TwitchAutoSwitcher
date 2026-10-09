@@ -65,6 +65,7 @@ public partial class MappingsPage : UserControl
     {
         InitializeComponent();
         App.Switcher.Changed += () => Dispatcher.InvokeAsync(RefreshState);
+        Multiworlds.MappingsChanged += () => Dispatcher.InvokeAsync(Refresh);
         IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) RefreshState(); };
         Refresh();
     }

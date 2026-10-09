@@ -8,6 +8,14 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.2.0] - 2026-10-09
+
+### Added
+- **Multiworlds**, a new page in the sidebar. Save the set of games you're playing, give it a name, and **Activate** it to turn those games on and pause every other mapping. Each multiworld shows its games at a glance, and can be edited (rename or change games), duplicated or deleted. **Turn all games on** puts every mapping back on.
+
+### Changed
+- The window is a little taller (950 px) to fit the new menu item.
+
 ## [1.1.13] - 2026-10-09
 
 ### Added
