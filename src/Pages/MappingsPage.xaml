@@ -6,6 +6,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -19,8 +20,14 @@
                     <TextBlock Text="Add category"/>
                 </StackPanel>
             </Button>
-            <Grid DockPanel.Dock="Right" Margin="0,0,10,0">
-                <Button x:Name="SortBtn" Style="{StaticResource OutlineButton}" Padding="16,0" Click="Sort_Click" ToolTip="Sort the list">
+            <TextBlock Text="Game Mappings" Style="{StaticResource H1}" VerticalAlignment="Center"/>
+        </DockPanel>
+
+
+        <!-- Toolbar: all on/off · sort -->
+        <DockPanel Grid.Row="1" Margin="0,14,0,0">
+            <Grid DockPanel.Dock="Right">
+                <Button x:Name="SortBtn" Style="{StaticResource OutlineButton}" Height="38" Padding="16,0" Click="Sort_Click" ToolTip="Sort the list">
                     <StackPanel Orientation="Horizontal">
                         <Viewbox Width="15" Height="15" Margin="0,0,8,0">
                             <Path Style="{StaticResource Icon}" Data="{StaticResource IconSort}" Stroke="{StaticResource Text2Brush}" StrokeThickness="2.2"/>
@@ -37,11 +44,20 @@
                     </Border>
                 </Popup>
             </Grid>
-            <TextBlock Text="Game Mappings" Style="{StaticResource H1}" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="AllOffBtn" Style="{StaticResource OutlineButton}" Height="38" Padding="16,0" Margin="0,0,8,0"
+                        Click="AllOff_Click" ToolTip="Pause every game mapping (deactivates any multiworld)">
+                    <TextBlock Text="All games off" FontWeight="Normal" Foreground="{StaticResource Text2Brush}"/>
+                </Button>
+                <Button x:Name="AllOnBtn" Style="{StaticResource OutlineButton}" Height="38" Padding="16,0"
+                        Click="AllOn_Click" ToolTip="Turn every game mapping on (deactivates any multiworld)">
+                    <TextBlock Text="All games on" FontWeight="Normal" Foreground="{StaticResource Text2Brush}"/>
+                </Button>
+            </StackPanel>
         </DockPanel>
 
         <!-- Active multiworld -->
-        <Border x:Name="WorldBanner" Grid.Row="1" Margin="0,16,0,0" Padding="16,10,10,10" CornerRadius="12" Visibility="Collapsed"
+        <Border x:Name="WorldBanner" Grid.Row="2" Margin="0,12,0,0" Padding="16,10,10,10" CornerRadius="12" Visibility="Collapsed"
                 Background="{StaticResource AccentDimBrush}" BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="1">
             <DockPanel>
                 <Button DockPanel.Dock="Right" Style="{StaticResource PillButton}" Content="Deactivate" Click="DeactivateWorld_Click"
@@ -58,7 +74,7 @@
         </Border>
 
         <!-- Mappings list -->
-        <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="3" Margin="0,12,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="MapList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type local:CategoryRow}">
@@ -110,7 +126,7 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <StackPanel x:Name="EmptyState" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
+        <StackPanel x:Name="EmptyState" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
             <TextBlock Text="No games mapped yet" Style="{StaticResource ItemTitle}" HorizontalAlignment="Center"/>
             <TextBlock Text="Add a Twitch category and the executables that should switch to it." Style="{StaticResource Sub}"
                        HorizontalAlignment="Center" Margin="0,6,0,0"/>

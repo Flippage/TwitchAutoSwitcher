@@ -128,7 +128,12 @@ public partial class MappingsPage : UserControl
         var w = Multiworlds.Active;
         WorldBanner.Visibility = w == null ? Visibility.Collapsed : Visibility.Visible;
         WorldBannerName.Text = w?.Name ?? "";
+        AllOnBtn.IsEnabled = App.Config.Categories.Any(c => !c.Enabled);
+        AllOffBtn.IsEnabled = App.Config.Categories.Any(c => c.Enabled);
     }
+
+    private void AllOn_Click(object sender, RoutedEventArgs e) => Multiworlds.AllOn();
+    private void AllOff_Click(object sender, RoutedEventArgs e) => Multiworlds.AllOff();
 
     private void DeactivateWorld_Click(object sender, RoutedEventArgs e) => Multiworlds.Deactivate();
 

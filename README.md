@@ -84,7 +84,7 @@
    - Add one or more executables with **Browse for .exe…** or **Pick running**.
    - Optionally set a **Custom Name** for each executable, e.g. `Zelda OoT SoH`.
    - Use the toggle on each category to **pause** it. It stays in your list but is ignored until you turn it back on.
-   - **Sort** the list by date added, name, or turned-on first.
+   - **Sort** the list by date added, name, or turned-on first, and use **All games off** / **All games on** to pause or resume everything at once.
 3. **Choose how to detect:** on **Behaviour**, pick **A game launches** or **A game window is focused**.
 4. **Set your title (optional):** on **Stream Titles**, write a template and insert name pills.
 

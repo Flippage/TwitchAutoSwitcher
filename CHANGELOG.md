@@ -8,6 +8,11 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.2.3] - 2026-10-09
+
+### Added
+- **All games off** and **All games on** on the **Mappings** page too, in a toolbar under the title alongside **Sort**.
+
 ## [1.2.2] - 2026-10-09
 
 ### Added
