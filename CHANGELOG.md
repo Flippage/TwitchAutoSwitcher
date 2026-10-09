@@ -8,6 +8,18 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.1.13] - 2026-10-09
+
+### Added
+- **RetroArch support.** Turn on **RetroArch (match the loaded game)** for `retroarch.exe` (it's on automatically when you add it) and enter the game's name. AutoSwitcher asks RetroArch which game is loaded, using RetroArch's **Network Commands** (Settings → Network, port 55355 by default). **Test connection** and **Use loaded game** check it's working.
+- **Fallback delay.** After a game closes, AutoSwitcher waits before switching to your fallback category (30 seconds by default, adjustable on **Behaviour**). If another mapped game starts in that time, it switches straight to that game instead.
+- **Sort the Mappings list** by date added (oldest or newest first), name (A–Z or Z–A), or turned-on first.
+- The Settings page shows your initial when your Twitch profile has no picture.
+
+### Fixed
+- Closing a game inside an emulator (while the emulator stays open) now removes it from the detected games and counts as the game closing. Before, it stayed listed until the emulator itself closed.
+- The Manual page shows box art for mapped categories straight away.
+
 ## [1.1.12] - 2026-10-08
 
 ### Fixed

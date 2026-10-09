@@ -15,6 +15,10 @@ public sealed class AppConfig
     public bool Toasts { get; set; } = true;
     public bool SuppressToastsFullscreen { get; set; } = true;
     public bool FallbackEnabled { get; set; }
+    /// <summary>Wait this long after a game closes before switching to the fallback (another game starting cancels it).</summary>
+    public int FallbackDelaySeconds { get; set; } = 30;
+    /// <summary>Mappings list order: "added" (oldest first), "newest", "az", "za", "on" (turned-on first).</summary>
+    public string MappingSort { get; set; } = "added";
     public CategoryRef FallbackCategory { get; set; } = new() { Id = "509658", Name = "Just Chatting", BoxArtUrl = "https://static-cdn.jtvnw.net/ttv-boxart/509658-{width}x{height}.jpg" };
     public bool StartWithWindows { get; set; }
     public bool CloseToTray { get; set; } = true;
@@ -61,7 +65,42 @@ public sealed class ExeMapping : System.ComponentModel.INotifyPropertyChanged
     public bool MatchTitle
     {
         get => _matchTitle;
-        set { _matchTitle = value; PropertyChanged?.Invoke(this, new(nameof(MatchTitle))); }
+        set
+        {
+            _matchTitle = value;
+            if (value && _retroArch) { _retroArch = false; PropertyChanged?.Invoke(this, new(nameof(RetroArch))); }
+            PropertyChanged?.Invoke(this, new(nameof(MatchTitle)));
+        }
+    }
+
+    private bool _retroArch;
+    private int _retroArchPort = AutoSwitcher.RetroArch.DefaultPort;
+
+    /// <summary>RetroArch: match <see cref="TitlePattern"/> against the loaded game (via Network Commands) instead of the window title.</summary>
+    public bool RetroArch
+    {
+        get => _retroArch;
+        set
+        {
+            _retroArch = value;
+            if (value && _matchTitle) { _matchTitle = false; PropertyChanged?.Invoke(this, new(nameof(MatchTitle))); }
+            PropertyChanged?.Invoke(this, new(nameof(RetroArch)));
+        }
+    }
+
+    private string _retroArchStatus = "";
+    /// <summary>Editor only: result of the last "Test connection".</summary>
+    [JsonIgnore] public string RetroArchStatus
+    {
+        get => _retroArchStatus;
+        set { _retroArchStatus = value; PropertyChanged?.Invoke(this, new(nameof(RetroArchStatus))); }
+    }
+
+    /// <summary>RetroArch's Network Command port (Settings → Network).</summary>
+    public int RetroArchPort
+    {
+        get => _retroArchPort;
+        set { _retroArchPort = value is > 0 and < 65536 ? value : AutoSwitcher.RetroArch.DefaultPort; PropertyChanged?.Invoke(this, new(nameof(RetroArchPort))); }
     }
 
     /// <summary>Case-insensitive "contains" text; * matches any run of characters (e.g. "Donkey Kong 64*USA").</summary>
@@ -72,16 +111,16 @@ public sealed class ExeMapping : System.ComponentModel.INotifyPropertyChanged
     }
 
     /// <summary>True when this mapping actually filters on the window title.</summary>
-    [JsonIgnore] public bool UsesTitle => MatchTitle && !string.IsNullOrWhiteSpace(TitlePattern);
+    [JsonIgnore] public bool UsesTitle => (MatchTitle || RetroArch) && !string.IsNullOrWhiteSpace(TitlePattern);
 
     /// <summary>Two mappings conflict only if they're the same exe AND the same title rule.</summary>
-    [JsonIgnore] public string Key => Path.ToLowerInvariant() + "|" + (UsesTitle ? TitlePattern.Trim().ToLowerInvariant() : "");
+    [JsonIgnore] public string Key => Path.ToLowerInvariant() + "|" + (UsesTitle ? (RetroArch ? "ra:" : "") + TitlePattern.Trim().ToLowerInvariant() : "");
 
     [JsonIgnore] public string FileName => System.IO.Path.GetFileName(Path);
     [JsonIgnore] public string ProcessName => System.IO.Path.GetFileNameWithoutExtension(Path);
     [JsonIgnore] public string EffectiveCustom => string.IsNullOrWhiteSpace(CustomName) ? FullName : CustomName.Trim();
 
-    public ExeMapping Clone() => new() { Path = Path, FullName = FullName, CustomName = CustomName, MatchTitle = MatchTitle, TitlePattern = TitlePattern };
+    public ExeMapping Clone() => new() { Path = Path, FullName = FullName, CustomName = CustomName, MatchTitle = MatchTitle, RetroArch = RetroArch, RetroArchPort = RetroArchPort, TitlePattern = TitlePattern };
 }
 
 public sealed class PendingUpdate

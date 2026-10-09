@@ -28,7 +28,7 @@
 - [Getting started](#getting-started)
 - [Stream titles](#stream-titles)
 - [Manual mode](#manual-mode)
-- [Emulators & window-title matching](#emulators--window-title-matching)
+- [Emulators & window-title matching](#emulators--window-title-matching) (including [RetroArch](#retroarch))
 - [Detection modes](#detection-modes)
 - [Notifications](#notifications)
 - [Updates](#updates)
@@ -82,6 +82,7 @@
    - Add one or more executables with **Browse for .exe…** or **Pick running**.
    - Optionally set a **Custom Name** for each executable, e.g. `Zelda OoT SoH`.
    - Use the toggle on each category to **pause** it. It stays in your list but is ignored until you turn it back on.
+   - **Sort** the list by date added, name, or turned-on first.
 3. **Choose how to detect:** on **Behaviour**, pick **A game launches** or **A game window is focused**.
 4. **Set your title (optional):** on **Stream Titles**, write a template and insert name pills.
 
@@ -156,6 +157,18 @@ Emulators and launchers often run many games from one executable. Turn on **Matc
 - **Use current title** copies the live window title so you only need to trim it.
 - Map the same emulator to several categories with different title text. The most specific match wins, and a mapping *without* title matching acts as the fallback.
 - Loading a new game inside an already-focused emulator is detected too.
+- Closing the game while the emulator stays open counts as the game closing.
+
+### RetroArch
+
+RetroArch's window title doesn't include the game, so AutoSwitcher asks RetroArch directly:
+
+1. In RetroArch, turn on **Settings → Network → Network Commands** (the port is `55355` unless you change it).
+2. In AutoSwitcher, add `retroarch.exe` to a category. **RetroArch (match the loaded game)** turns on automatically.
+3. Load the game in RetroArch and click **Use loaded game**, or type part of its name (e.g. `Super Mario 64`). **Test connection** shows what RetroArch reports.
+4. Add `retroarch.exe` to each game's category the same way, with that game's name.
+
+The same "most specific match wins" rule applies, so `Super Smash Bros.` and `Super Smash Bros. Melee` can both be mapped.
 
 ---
 
@@ -165,6 +178,8 @@ Emulators and launchers often run many games from one executable. Turn on **Matc
 |---|---|---|
 | **A game window is focused** | Multiworlds with several games open | Switches when you click into a mapped game. A configurable **focus delay** (default 8 s) prevents switching while you click back and forth. |
 | **A game launches** | One game at a time | Switches when a mapped game starts. When it closes, it switches to another running mapped game, or to your **fallback category** (optional). |
+
+**Fallback category** (Behaviour, optional): when a game closes and no other mapped game takes over, AutoSwitcher switches to this category, after a short wait (30 s by default) so closing one ROM and loading the next doesn't flip to the fallback in between.
 
 <p align="center">
   <img src="docs/screenshots/behaviour.png" alt="Behaviour: detection mode, focus delay, title, notification and fallback options" width="820">

@@ -49,7 +49,10 @@ public partial class EditCategoryPage : UserControl
     {
         // Same exe twice is fine only if one of them uses a title rule (set it after adding).
         if (_exes.Any(e => string.Equals(e.Path, path, StringComparison.OrdinalIgnoreCase) && !e.UsesTitle)) return;
-        _exes.Add(new ExeMapping { Path = path, FullName = ReadFullName(path) });
+        var exe = new ExeMapping { Path = path, FullName = ReadFullName(path) };
+        // RetroArch never names the game in its window title: start with the RetroArch option on.
+        if (Path.GetFileNameWithoutExtension(path).Equals("retroarch", StringComparison.OrdinalIgnoreCase)) exe.RetroArch = true;
+        _exes.Add(exe);
         ErrorText.Text = "";
     }
 
@@ -94,6 +97,28 @@ public partial class EditCategoryPage : UserControl
         ErrorText.Text = "";
     }
 
+    private async void TestRetroArch_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { CommandParameter: ExeMapping exe }) return;
+        exe.RetroArchStatus = "Checking…";
+        var st = await RetroArch.QueryAsync(exe.RetroArchPort, TimeSpan.FromSeconds(1.5));
+        exe.RetroArchStatus = !st.Reachable ? $"✗ No answer on port {exe.RetroArchPort}. Is RetroArch open with Network Commands on?"
+                            : st.Game.Length == 0 ? "✓ Connected · no game loaded"
+                            : $"✓ Connected · {st.Game}";
+        Log.Info("retroarch", $"Test on port {exe.RetroArchPort}: {(st.Reachable ? st.Raw : "no answer")}");
+    }
+
+    private async void UseRetroArchGame_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { CommandParameter: ExeMapping exe }) return;
+        var st = await RetroArch.QueryAsync(exe.RetroArchPort, TimeSpan.FromSeconds(1.5));
+        if (!st.Reachable) { exe.RetroArchStatus = $"✗ No answer on port {exe.RetroArchPort}. Is RetroArch open with Network Commands on?"; return; }
+        if (st.Game.Length == 0) { exe.RetroArchStatus = "✓ Connected · load a game in RetroArch first"; return; }
+        exe.TitlePattern = st.Game;
+        exe.RetroArchStatus = "✓ Connected · " + st.Game;
+        ErrorText.Text = "";
+    }
+
     private void RemoveExe_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button { CommandParameter: ExeMapping exe }) _exes.Remove(exe);
@@ -116,6 +141,11 @@ public partial class EditCategoryPage : UserControl
             if (x.MatchTitle && x.TitlePattern.Length == 0)
             {
                 ErrorText.Text = $"Enter the window title to match for {x.FileName}, or turn Match window title off.";
+                return;
+            }
+            if (x.RetroArch && x.TitlePattern.Length == 0)
+            {
+                ErrorText.Text = $"Enter the game name to match for {x.FileName} (or click Use loaded game), or turn the RetroArch option off.";
                 return;
             }
         }

@@ -148,6 +148,13 @@ public partial class App : Application
             Watcher.UpdateMappings(Config.Categories);
             Watcher.Start(DetectionMode.Launch);
             await Task.Delay(800);
+            // RetroArch replies: names can contain commas; CONTENTLESS has no game.
+            var ra = RetroArch.Parse("GET_STATUS PLAYING n64,Legend of Zelda, The - Ocarina of Time (USA),crc32=CD16C529");
+            if (ra.State != "PLAYING" || ra.System != "n64" || ra.Game != "Legend of Zelda, The - Ocarina of Time (USA)")
+                throw new InvalidOperationException($"RetroArch parse failed: '{ra.State}' '{ra.System}' '{ra.Game}'");
+            if (RetroArch.Parse("GET_STATUS CONTENTLESS").Game != "") throw new InvalidOperationException("RetroArch CONTENTLESS parse failed.");
+            if ((await RetroArch.QueryAsync(55399, TimeSpan.FromMilliseconds(300))).Reachable)
+                throw new InvalidOperationException("RetroArch query reported an answer from a closed port.");
             window.SelfTestVisitPages();
             await window.SelfTestFlipStackAsync();
             await window.SelfTestConfirmAsync();

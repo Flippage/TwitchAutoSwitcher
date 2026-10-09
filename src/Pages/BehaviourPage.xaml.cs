@@ -34,6 +34,7 @@ public partial class BehaviourPage : UserControl
         FallbackPicker.SetSelected(string.IsNullOrEmpty(cfg.FallbackCategory.Id) ? null : cfg.FallbackCategory);
         _loading = false;
         UpdateDelay();
+        UpdateFallbackDelay();
         UpdateVisibility();
         _ = FillMissingArtAsync();
     }
@@ -56,7 +57,7 @@ public partial class BehaviourPage : UserControl
     private void UpdateVisibility()
     {
         DelayCard.Visibility = App.Config.Mode == DetectionMode.Focus ? Visibility.Visible : Visibility.Collapsed;
-        FallbackPicker.Visibility = App.Config.FallbackEnabled ? Visibility.Visible : Visibility.Collapsed;
+        FallbackOptions.Visibility = App.Config.FallbackEnabled ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void UpdateDelay()
@@ -83,6 +84,18 @@ public partial class BehaviourPage : UserControl
         App.SaveConfig();
         UpdateDelay();
     }
+
+    private void UpdateFallbackDelay() => FallbackDelayText.Text = $"{App.Config.FallbackDelaySeconds} s";
+
+    private void ChangeFallbackDelay(int delta)
+    {
+        App.Config.FallbackDelaySeconds = Math.Clamp(App.Config.FallbackDelaySeconds + delta, 0, 600);
+        App.SaveConfig();
+        UpdateFallbackDelay();
+    }
+
+    private void FallbackDelayDown_Click(object sender, RoutedEventArgs e) => ChangeFallbackDelay(-5);
+    private void FallbackDelayUp_Click(object sender, RoutedEventArgs e) => ChangeFallbackDelay(+5);
 
     private void DelayDown_Click(object sender, RoutedEventArgs e) => ChangeDelay(-1);
     private void DelayUp_Click(object sender, RoutedEventArgs e) => ChangeDelay(+1);

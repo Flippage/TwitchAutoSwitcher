@@ -54,6 +54,29 @@ public sealed class Switcher
     {
         _cfg = cfg;
         _tw = tw;
+        _fallbackTimer = new System.Windows.Threading.DispatcherTimer();
+        _fallbackTimer.Tick += async (_, _) => { _fallbackTimer.Stop(); FallbackDueUtc = null; await ApplyFallbackAsync(); };
+    }
+
+    // Fallback waits a while, so closing one game and starting the next doesn't flip to the fallback in between.
+    private readonly System.Windows.Threading.DispatcherTimer _fallbackTimer;
+    public DateTime? FallbackDueUtc { get; private set; }
+
+    private void CancelFallback(string why)
+    {
+        if (FallbackDueUtc == null) return;
+        _fallbackTimer.Stop();
+        FallbackDueUtc = null;
+        Log.Info("switch", $"Fallback cancelled ({why})");
+        Changed?.Invoke();
+    }
+
+    private async Task ApplyFallbackAsync()
+    {
+        var f = _cfg.FallbackCategory;
+        if (!_cfg.AutoSwitch || !_cfg.FallbackEnabled || string.IsNullOrEmpty(f.Id) || Current != null) return;
+        string? title = _cfg.UpdateTitle ? Render(_cfg.TitleTemplate, f.Name, f.Name, f.Name) : null;
+        await ApplyAsync(f.Id, f.Name, title, f.Name, "Game closed · fallback category", f.BoxArtUrl);
     }
 
     public static string Render(string template, string gameName, string fullName, string customName)
@@ -94,6 +117,7 @@ public sealed class Switcher
 
     public async void OnActivated(GameHit hit)
     {
+        CancelFallback("a game was detected");
         Current = hit;
         Changed?.Invoke();
         if (!_cfg.AutoSwitch) return;
@@ -108,13 +132,20 @@ public sealed class Switcher
         Changed?.Invoke();
         var f = _cfg.FallbackCategory;
         if (!_cfg.AutoSwitch || !_cfg.FallbackEnabled || string.IsNullOrEmpty(f.Id)) return;
-        string? title = _cfg.UpdateTitle ? Render(_cfg.TitleTemplate, f.Name, f.Name, f.Name) : null;
-        await ApplyAsync(f.Id, f.Name, title, f.Name, "Game closed · fallback category", f.BoxArtUrl);
+        int delay = Math.Max(0, _cfg.FallbackDelaySeconds);
+        if (delay == 0) { await ApplyFallbackAsync(); return; }
+        FallbackDueUtc = DateTime.UtcNow.AddSeconds(delay);
+        _fallbackTimer.Interval = TimeSpan.FromSeconds(delay);
+        _fallbackTimer.Stop();
+        _fallbackTimer.Start();
+        Log.Info("switch", $"Fallback to {f.Name} in {delay}s unless another game starts");
+        Changed?.Invoke();
     }
 
     /// <summary>"Switch now" from the sidebar: apply the detected game even while auto-switch is off.</summary>
     public async Task SwitchNowAsync(GameHit hit)
     {
+        CancelFallback("Switch now");
         Current = hit;
         string? title = _cfg.UpdateTitle ? RenderFor(hit) : null;
         await ApplyAsync(hit.Category.Id, hit.Category.Name, title, hit.Exe.EffectiveCustom, "Switched from AutoSwitcher", hit.Category.BoxArtUrl);

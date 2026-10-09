@@ -81,7 +81,27 @@
                                 <TextBlock Text="Switch to this category after the current mapped game exits." Style="{StaticResource Sub}" Margin="0,2,0,0"/>
                             </StackPanel>
                         </DockPanel>
-                        <local:CategoryPicker x:Name="FallbackPicker" Margin="0,12,0,0" ResultsMaxHeight="240"/>
+                        <StackPanel x:Name="FallbackOptions">
+                            <local:CategoryPicker x:Name="FallbackPicker" Margin="0,12,0,0" ResultsMaxHeight="240"/>
+                            <DockPanel Margin="0,14,0,0">
+                                <Border DockPanel.Dock="Right" Background="{StaticResource FieldDeepBrush}" BorderBrush="{StaticResource LineBrush}"
+                                        BorderThickness="2" CornerRadius="24" Padding="1" VerticalAlignment="Center" Margin="16,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Style="{StaticResource BtnBase}" Background="Transparent" Width="44" Padding="0" FontSize="20"
+                                                Content="−" ToolTip="Decrease (5 s)" Click="FallbackDelayDown_Click"/>
+                                        <TextBlock x:Name="FallbackDelayText" MinWidth="56" TextAlignment="Center" VerticalAlignment="Center"
+                                                   FontSize="16" FontWeight="Bold"/>
+                                        <Button Style="{StaticResource BtnBase}" Background="Transparent" Width="44" Padding="0" FontSize="20"
+                                                Content="+" ToolTip="Increase (5 s)" Click="FallbackDelayUp_Click"/>
+                                    </StackPanel>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Wait before switching to the fallback" FontSize="14" FontWeight="SemiBold"/>
+                                    <TextBlock Style="{StaticResource Sub}" FontSize="13" Margin="0,2,0,0" TextWrapping="Wrap"
+                                               Text="If another mapped game starts within this time, it switches straight to that game instead. Handy when you close one ROM to load the next."/>
+                                </StackPanel>
+                            </DockPanel>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Border>

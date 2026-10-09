@@ -152,6 +152,42 @@
                                                     <TextBlock Style="{StaticResource Sub}" FontSize="11.5" Margin="0,6,0,0"
                                                                Text="Matches when the window title contains this text (any case). Delete parts that change, or use * for them, e.g. Donkey Kong 64*USA."/>
                                                 </StackPanel>
+
+                                                <!-- RetroArch: the window title doesn't name the game, so ask RetroArch (Network Commands) -->
+                                                <CheckBox Style="{StaticResource Toggle}" HorizontalAlignment="Left" Margin="0,10,0,0"
+                                                          IsChecked="{Binding RetroArch, UpdateSourceTrigger=PropertyChanged}"
+                                                          ToolTip="For RetroArch: match the game RetroArch has loaded">
+                                                    <TextBlock Text="RetroArch (match the loaded game)" FontSize="12.5" Foreground="{StaticResource Text2Brush}"/>
+                                                </CheckBox>
+                                                <StackPanel Margin="0,8,0,0" Visibility="{Binding RetroArch, Converter={StaticResource BoolToVis}}">
+                                                    <Border Background="{StaticResource AccentDimBrush}" BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="1"
+                                                            CornerRadius="8" Padding="10,8" Margin="0,0,0,10">
+                                                        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource Text2Brush}">
+                                                            In RetroArch, turn on <Run FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="Settings → Network → Network Commands"/>.
+                                                            AutoSwitcher then asks RetroArch which game is loaded. Use the same port as RetroArch (55355 unless you changed it).
+                                                        </TextBlock>
+                                                    </Border>
+                                                    <DockPanel>
+                                                        <Button DockPanel.Dock="Right" Style="{StaticResource PillButton}" Content="Use loaded game"
+                                                                CommandParameter="{Binding}" Click="UseRetroArchGame_Click" Margin="10,0,0,0"
+                                                                ToolTip="Ask RetroArch which game is loaded and use its name"/>
+                                                        <TextBox Style="{StaticResource FlatField}" FontWeight="Normal"
+                                                                 Text="{Binding TitlePattern, UpdateSourceTrigger=PropertyChanged}"
+                                                                 Tag="Game name contains… e.g. Super Mario 64"/>
+                                                    </DockPanel>
+                                                    <DockPanel Margin="0,10,0,0">
+                                                        <TextBlock Text="PORT" Style="{StaticResource Caps}" FontSize="10" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                        <TextBox Style="{StaticResource FlatField}" FontWeight="Normal" Width="70" VerticalAlignment="Center"
+                                                                 Text="{Binding RetroArchPort, UpdateSourceTrigger=LostFocus}"/>
+                                                        <Button Style="{StaticResource PillButton}" Content="Test connection" Margin="10,0,0,0"
+                                                                CommandParameter="{Binding}" Click="TestRetroArch_Click" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding RetroArchStatus}" FontSize="12" Foreground="{StaticResource Text2Brush}"
+                                                                   VerticalAlignment="Center" Margin="10,0,0,0" TextTrimming="CharacterEllipsis"
+                                                                   ToolTip="{Binding RetroArchStatus}"/>
+                                                    </DockPanel>
+                                                    <TextBlock Style="{StaticResource Sub}" FontSize="11.5" Margin="0,6,0,0" TextWrapping="Wrap"
+                                                               Text="Matches when the loaded game's name contains this text (any case), e.g. Super Mario 64. Use * for parts that change. Map RetroArch once per game."/>
+                                                </StackPanel>
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>

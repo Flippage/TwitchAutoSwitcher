@@ -67,6 +67,12 @@ public sealed class GameWatcher : IDisposable
 
     public GameWatcher()
     {
+        RetroArch.Changed += _ => _ui.InvokeAsync(() =>
+        {
+            if (!_running) return;
+            Poll();
+            if (Mode == DetectionMode.Focus) EvaluateFocus(immediate: false);
+        });
         _hookProc = OnForegroundEvent;
         _nameProc = OnNameChangeEvent;
         _pendingTimer = new DispatcherTimer(DispatcherPriority.Background);
@@ -187,9 +193,10 @@ public sealed class GameWatcher : IDisposable
         Candidate? best = null;
         if (list.Any(c => c.Title != null))
         {
-            title ??= Native.FindMainWindowTitle(pid) ?? "";
             foreach (var c in list)
-                if (c.Title != null && c.Title.IsMatch(title) &&
+                if (c.Title != null && c.Title.IsMatch(c.Exe.RetroArch
+                        ? RetroArch.CurrentGame(c.Exe.RetroArchPort)               // RetroArch: the loaded game
+                        : (title ??= Native.FindMainWindowTitle(pid) ?? "")) &&
                     (best == null || c.Exe.TitlePattern.Length > best.Exe.TitlePattern.Length))
                     best = c;
         }
@@ -354,6 +361,7 @@ public sealed class GameWatcher : IDisposable
         var ids = Native.EnumProcessIds();
         _alive.Clear();
         GameHit? newest = null;
+        GameHit? goneCurrent = null;
         bool changed = false;
         foreach (uint id in ids)
         {
@@ -388,17 +396,26 @@ public sealed class GameWatcher : IDisposable
         {
             var now = Resolve(pid, null);
             var before = _known[pid];
-            bool swapped = now != null && (before == null || !ReferenceEquals(before.Exe, now.Exe));
-            if (swapped)
+            if (ReferenceEquals(before?.Exe, now?.Exe)) continue;
+            _known[pid] = now;
+            changed = true;
+            if (now != null)
             {
-                _known[pid] = now;
                 _firstSeen[pid] = DateTime.UtcNow;
-                changed = true;
-                if (_primed) { newest = now; Log.Info("scan", "Title matched: " + Describe(now!)); }
+                if (_primed) { newest = now; Log.Info("scan", "Title matched: " + Describe(now)); }
+            }
+            else
+            {
+                // The game was closed inside the emulator (title / loaded game no longer matches): drop it,
+                // and treat it like the game closing if it was the current one.
+                _firstSeen.Remove(pid);
+                Log.Info("scan", "No longer matches: " + Describe(before!));
+                if (Current != null && Current.Pid == (int)pid && ReferenceEquals(Current.Exe, before!.Exe)) goneCurrent = Current;
             }
         }
 
         if (changed || !_primed) RebuildRunning();
+        if (goneCurrent != null && newest == null) CurrentGone(goneCurrent, "no longer matches");
 
         bool wasPrimed = _primed;
         _primed = true;
@@ -454,9 +471,14 @@ public sealed class GameWatcher : IDisposable
     {
         if (_known.Remove((uint)pid)) { _firstSeen.Remove((uint)pid); _titleWatch.Remove((uint)pid); RebuildRunning(); }
         if (Current == null || Current.Pid != pid) return;
-        var gone = Current;
+        CurrentGone(Current, "closed");
+    }
+
+    /// <summary>The current game closed (or stopped matching): launch mode moves to another running game, else fallback.</summary>
+    private void CurrentGone(GameHit gone, string why)
+    {
         Current = null;
-        Log.Info("detect", "Current game closed: " + Describe(gone));
+        Log.Info("detect", $"Current game {why}: " + Describe(gone));
 
         if (Mode == DetectionMode.Launch && _runningList.FirstOrDefault() is { } other)
         {

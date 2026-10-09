@@ -49,6 +49,7 @@
     <Geometry x:Key="IconCopy">M9,9 L21,9 L21,21 L9,21 Z M5,15 L3,15 L3,3 L15,3 L15,5</Geometry>
     <Geometry x:Key="IconSwitch">M17,2 L21,6 L17,10 M3,12 L3,9 C3,7.3 4.3,6 6,6 L21,6 M7,22 L3,18 L7,14 M21,12 L21,15 C21,16.7 19.7,18 18,18 L3,18</Geometry>
     <Geometry x:Key="IconPause">M7,5 L10,5 L10,19 L7,19 Z M14,5 L17,5 L17,19 L14,19 Z</Geometry>
+    <Geometry x:Key="IconSort">M4,7 L13,7 M4,12 L10,12 M4,17 L7,17 M18,5 L18,19 M15,16 L18,19 L21,16</Geometry>
     <Geometry x:Key="IconWindow">M3,5 L21,5 L21,19 L3,19 Z M3,9 L21,9</Geometry>
 
     <Style x:Key="Icon" TargetType="Path">

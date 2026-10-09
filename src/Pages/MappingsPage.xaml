@@ -18,6 +18,24 @@
                     <TextBlock Text="Add category"/>
                 </StackPanel>
             </Button>
+            <Grid DockPanel.Dock="Right" Margin="0,0,10,0">
+                <Button x:Name="SortBtn" Style="{StaticResource OutlineButton}" Padding="16,0" Click="Sort_Click" ToolTip="Sort the list">
+                    <StackPanel Orientation="Horizontal">
+                        <Viewbox Width="15" Height="15" Margin="0,0,8,0">
+                            <Path Style="{StaticResource Icon}" Data="{StaticResource IconSort}" Stroke="{StaticResource Text2Brush}" StrokeThickness="2.2"/>
+                        </Viewbox>
+                        <TextBlock x:Name="SortLabel" Text="Oldest first" FontWeight="Normal" Foreground="{StaticResource Text2Brush}"/>
+                    </StackPanel>
+                </Button>
+                <Popup x:Name="SortPopup" PlacementTarget="{Binding ElementName=SortBtn}" Placement="Bottom" VerticalOffset="6"
+                       StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
+                    <Border Background="#1A1A1A" BorderBrush="{StaticResource LineBrush}" BorderThickness="2" CornerRadius="12" MinWidth="220"
+                            TextElement.FontFamily="{StaticResource UiFont}" TextElement.Foreground="{StaticResource TextBrush}">
+                        <ListBox x:Name="SortList" Style="{StaticResource ResultList}" Background="Transparent" FontSize="13.5"
+                                 DisplayMemberPath="Label" PreviewMouseLeftButtonUp="SortList_Click" KeyDown="SortList_KeyDown"/>
+                    </Border>
+                </Popup>
+            </Grid>
             <TextBlock Text="Game Mappings" Style="{StaticResource H1}" VerticalAlignment="Center"/>
         </DockPanel>
 
