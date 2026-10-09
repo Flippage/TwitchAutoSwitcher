@@ -112,7 +112,9 @@ The **On Stream** panel in the sidebar always shows the category currently set o
 Keep every game you own in **Mappings**, and save the ones you're playing together as a **multiworld**:
 
 - **New multiworld**: give it a name and pick its games (it starts with the games that are turned on right now).
-- **Activate** turns that multiworld's games on and pauses every other mapping, so only those games can switch your category. The active one is marked **ACTIVE**.
+- **Activate** turns that multiworld's games on and pauses every other mapping, so only those games can switch your category. The active one is marked **ACTIVE**, and **Mappings** shows a banner while it's on.
+- **Deactivate** turns it off and puts every game back on or off exactly as it was before you activated it.
+- Turning a game on or off by hand so the games no longer match deactivates the multiworld automatically (your change is kept).
 - Each multiworld shows its games at a glance. Use the icons to **edit** (rename or change games), **duplicate** or **delete** it.
 - **Turn all games on** puts every mapping back on.
 

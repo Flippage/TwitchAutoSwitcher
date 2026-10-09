@@ -94,6 +94,7 @@ public partial class EditMultiworldPage : UserControl
         App.SaveConfig();
         Log.Info("multiworld", $"{(_existing == null ? "Created" : "Saved")} \"{w.Name}\" ({ids.Count} games)");
         if (activate) Multiworlds.Activate(w);
+        else Multiworlds.Reapply(w);   // editing the active multiworld applies its new games straight away
         (Window.GetWindow(this) as MainWindow)?.CloseMultiworldEditor();
     }
 }

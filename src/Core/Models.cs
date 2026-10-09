@@ -30,6 +30,10 @@ public sealed class AppConfig
     public List<CategoryMapping> Categories { get; set; } = new();
     /// <summary>Saved sets of games; activating one turns those mappings on and pauses the rest.</summary>
     public List<Multiworld> Multiworlds { get; set; } = new();
+    /// <summary>The multiworld that's switched on, if any.</summary>
+    public string? ActiveMultiworldId { get; set; }
+    /// <summary>Each mapping's on/off state from before the first multiworld was activated (restored on Deactivate).</summary>
+    public Dictionary<string, bool>? PreMultiworldEnabled { get; set; }
 }
 
 /// <summary>A Twitch category (game) as returned by Helix.</summary>

@@ -200,6 +200,7 @@ public partial class EditCategoryPage : UserControl
         App.SaveConfig();
         App.Watcher.UpdateMappings(App.Config.Categories);
         App.Switcher.ForgetIfInactive(App.Config.Categories);
+        Multiworlds.MappingsEdited();   // e.g. a new game (turned on) means the active multiworld no longer matches
         (Window.GetWindow(this) as MainWindow)?.CloseEditor();
     }
 }

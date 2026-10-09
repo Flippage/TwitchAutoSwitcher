@@ -54,6 +54,12 @@ public partial class MultiworldsPage : UserControl
         if (sender is Button { CommandParameter: Multiworld w }) { Multiworlds.Activate(w); Refresh(); }
     }
 
+    private void Deactivate_Click(object sender, RoutedEventArgs e)
+    {
+        Multiworlds.Deactivate();
+        Refresh();
+    }
+
     private void AllOn_Click(object sender, RoutedEventArgs e)
     {
         Multiworlds.AllOn();
@@ -74,13 +80,14 @@ public partial class MultiworldsPage : UserControl
     {
         if (sender is not Button { CommandParameter: Multiworld w } || Main is not { } main) return;
         var games = Multiworlds.GamesOf(w);
+        bool active = Multiworlds.IsActive(w);
         bool ok = await main.ConfirmAsync("Delete multiworld?",
-            "Your game mappings aren't changed: games stay turned on or off as they are now.",
+            active ? "It's active, so your games go back to how they were before you activated it."
+                   : "Your game mappings aren't changed: games stay turned on or off as they are now.",
             "Delete", w.Name, games.Count == 0 ? "No games" : string.Join(", ", games.Select(g => g.Name)),
             games.FirstOrDefault()?.BoxArtUrl);
         if (!ok) return;
-        App.Config.Multiworlds.Remove(w);
-        App.SaveConfig();
+        Multiworlds.Delete(w);
         Refresh();
     }
 }

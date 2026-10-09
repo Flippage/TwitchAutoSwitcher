@@ -159,7 +159,8 @@ public partial class App : Application
             window.SelfTestVisitPages();
             await window.SelfTestFlipStackAsync();
             await window.SelfTestConfirmAsync();
-            // A multiworld turns exactly its games on; "all on" restores.
+            // Multiworlds: activate turns exactly its games on; deactivate restores; a hand change auto-deactivates.
+            Config.Categories[0].Enabled = false;                                  // pretend game 1 was off beforehand
             var mw = new Multiworld { Name = "Self-test world", CategoryIds = { "1", "2" } };
             Config.Multiworlds.Add(mw);
             Multiworlds.Activate(mw);
@@ -168,9 +169,16 @@ public partial class App : Application
             if (Watcher.Running.Any(h => h.Category.Id == "3")) throw new InvalidOperationException("A game outside the multiworld was still detected.");
             window.NavMultiworlds.IsChecked = true;
             window.UpdateLayout();
+            Multiworlds.Deactivate();
+            if (Multiworlds.IsActive(mw) || Config.Categories[0].Enabled || !Config.Categories[1].Enabled || !Config.Categories[2].Enabled)
+                throw new InvalidOperationException("Deactivating didn't restore the games' previous state.");
+            Multiworlds.Activate(mw);
+            Config.Categories[2].Enabled = true;                                   // turn on a game outside it by hand
+            Multiworlds.MappingsEdited();
+            if (Multiworlds.Active != null || !Config.Categories[2].Enabled)
+                throw new InvalidOperationException("A hand change didn't deactivate the multiworld (or was reverted).");
             Multiworlds.AllOn();
-            if (Config.Categories.Any(c => !c.Enabled) || Multiworlds.IsActive(mw)) throw new InvalidOperationException("Turn all games on failed.");
-            Config.Multiworlds.Remove(mw);
+            Multiworlds.Delete(mw);
             // Pausing a mapping must remove it from detection straight away — including a game picked with Switch now.
             if (Watcher.Running.FirstOrDefault(h => h.Category.Id == "3") is { } three) await Switcher.SwitchNowAsync(three);
             Config.Categories[2].Enabled = false;

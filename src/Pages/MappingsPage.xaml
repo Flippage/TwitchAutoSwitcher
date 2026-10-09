@@ -5,6 +5,7 @@
     <Grid Margin="32,26,32,20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -39,8 +40,25 @@
             <TextBlock Text="Game Mappings" Style="{StaticResource H1}" VerticalAlignment="Center"/>
         </DockPanel>
 
+        <!-- Active multiworld -->
+        <Border x:Name="WorldBanner" Grid.Row="1" Margin="0,16,0,0" Padding="16,10,10,10" CornerRadius="12" Visibility="Collapsed"
+                Background="{StaticResource AccentDimBrush}" BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="1">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Style="{StaticResource PillButton}" Content="Deactivate" Click="DeactivateWorld_Click"
+                        Foreground="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentLineBrush}" VerticalAlignment="Center"
+                        ToolTip="Turn the multiworld off and put your games back how they were"/>
+                <Viewbox DockPanel.Dock="Left" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,12,0">
+                    <Path Style="{StaticResource Icon}" Data="{StaticResource IconGlobe}" Stroke="{StaticResource AccentBrush}" StrokeThickness="2"/>
+                </Viewbox>
+                <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource Text2Brush}" Margin="0,0,12,0">
+                    <Run x:Name="WorldBannerName" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/> is active, so only its games are on.
+                    Turning a game on or off here deactivates it.
+                </TextBlock>
+            </DockPanel>
+        </Border>
+
         <!-- Mappings list -->
-        <ScrollViewer Grid.Row="1" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="2" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <ItemsControl x:Name="MapList">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type local:CategoryRow}">
@@ -92,7 +110,7 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <StackPanel x:Name="EmptyState" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
+        <StackPanel x:Name="EmptyState" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
             <TextBlock Text="No games mapped yet" Style="{StaticResource ItemTitle}" HorizontalAlignment="Center"/>
             <TextBlock Text="Add a Twitch category and the executables that should switch to it." Style="{StaticResource Sub}"
                        HorizontalAlignment="Center" Margin="0,6,0,0"/>

@@ -85,6 +85,8 @@ public static class Screenshots
             { Id("The Legend of Zelda: Ocarina of Time"), Id("Hollow Knight"), Id("Super Mario 64"), Id("Super Metroid") } });
         cfg.Multiworlds.Add(new Multiworld { Name = "Speedrun practice", CategoryIds = { Id("Super Mario 64"), Id("Celeste") } });
         cfg.Multiworlds.Add(new Multiworld { Name = "Chill Sunday", CategoryIds = { Id("Hollow Knight"), Id("Celeste"), Id("Super Metroid") } });
+        cfg.ActiveMultiworldId = cfg.Multiworlds[0].Id;
+        cfg.PreMultiworldEnabled = cfg.Categories.ToDictionary(c => c.Id, _ => true);
         return cfg;
     }
 

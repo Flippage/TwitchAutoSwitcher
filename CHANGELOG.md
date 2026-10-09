@@ -8,6 +8,17 @@ How to add a release:
   2. Commit, then Actions → Build AutoSwitcher → Run workflow with the same version number.
 -->
 
+## [1.2.1] - 2026-10-09
+
+### Added
+- **Deactivate** for the active multiworld. It turns the multiworld off and puts every game back on or off exactly as it was before you activated it (switching straight from one multiworld to another still remembers the original state).
+- While a multiworld is active, **Mappings** shows a banner naming it, with its own **Deactivate** button.
+
+### Changed
+- Turning a game on or off by hand (or adding one) so the games no longer match the active multiworld now deactivates it automatically. Your change is kept.
+- Deleting the active multiworld puts your games back how they were first.
+- Editing the active multiworld's games applies the change straight away.
+
 ## [1.2.0] - 2026-10-09
 
 ### Added

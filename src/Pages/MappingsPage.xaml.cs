@@ -65,7 +65,12 @@ public partial class MappingsPage : UserControl
     {
         InitializeComponent();
         App.Switcher.Changed += () => Dispatcher.InvokeAsync(RefreshState);
-        Multiworlds.MappingsChanged += () => Dispatcher.InvokeAsync(Refresh);
+        // Multiworld activated/deactivated: update toggles in place (they animate) and the banner.
+        Multiworlds.MappingsChanged += () => Dispatcher.InvokeAsync(() =>
+        {
+            if (MapList.ItemsSource is IEnumerable<CategoryRow> rows) foreach (var r in rows) r.NotifyEnabled();
+            UpdateBanner();
+        });
         IsVisibleChanged += (_, e) => { if ((bool)e.NewValue) RefreshState(); };
         Refresh();
     }
@@ -109,6 +114,7 @@ public partial class MappingsPage : UserControl
         }).ToList();
         MapList.ItemsSource = rows;
         EmptyState.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        UpdateBanner();
     }
 
     /// <summary>Only the active-exe highlight lives here now; status is in the sidebar.</summary>
@@ -116,6 +122,15 @@ public partial class MappingsPage : UserControl
     {
         if (!ReferenceEquals(_renderedActive, App.Switcher.Current?.Exe)) BuildRows();
     }
+
+    private void UpdateBanner()
+    {
+        var w = Multiworlds.Active;
+        WorldBanner.Visibility = w == null ? Visibility.Collapsed : Visibility.Visible;
+        WorldBannerName.Text = w?.Name ?? "";
+    }
+
+    private void DeactivateWorld_Click(object sender, RoutedEventArgs e) => Multiworlds.Deactivate();
 
     private void Sort_Click(object sender, RoutedEventArgs e)
     {
@@ -163,6 +178,7 @@ public partial class MappingsPage : UserControl
         App.Watcher.UpdateMappings(App.Config.Categories);
         App.Switcher.ForgetIfInactive(App.Config.Categories);
         (box.DataContext as CategoryRow)?.NotifyEnabled();   // update just this row; the others stay untouched
+        Multiworlds.MappingsEdited();                        // a hand change that breaks the active multiworld turns it off
     }
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
@@ -183,5 +199,6 @@ public partial class MappingsPage : UserControl
         App.Watcher.UpdateMappings(App.Config.Categories);
         App.Switcher.ForgetIfInactive(App.Config.Categories);
         Refresh();
+        Multiworlds.MappingsEdited();
     }
 }

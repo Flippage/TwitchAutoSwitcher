@@ -42,6 +42,11 @@
                                                 Content="Activate" Visibility="{Binding ActivateVis}" Margin="0,0,8,0"
                                                 CommandParameter="{Binding World}" Click="Activate_Click"
                                                 ToolTip="Turn these games on and pause the rest"/>
+                                        <Button Style="{StaticResource OutlineButton}" Height="36" Padding="16,0" FontSize="13"
+                                                Content="Deactivate" Visibility="{Binding ActiveVis}" Margin="0,0,8,0"
+                                                Foreground="{StaticResource AccentBrush}" BorderBrush="{StaticResource AccentLineBrush}"
+                                                Click="Deactivate_Click"
+                                                ToolTip="Turn this multiworld off and put your games back how they were"/>
                                         <Button Style="{StaticResource IconButton}" Tag="{StaticResource IconPencil}" ToolTip="Rename or change games"
                                                 CommandParameter="{Binding World}" Click="Edit_Click"/>
                                         <Button Style="{StaticResource IconButton}" Tag="{StaticResource IconCopy}" ToolTip="Duplicate"
